@@ -61,6 +61,7 @@ def readIndex(title):
     title = title+"Index.txt"
     f = open(title)
     index = {}
+    documents = []
     for line in f:
         if(line.split(":")[1].strip()==""):
             word = line.split(":")[0]
@@ -68,13 +69,15 @@ def readIndex(title):
         else:
             document = line.split(":")[0].strip()
             positions =line.split(":")[1].split(",")
+            if document not in documents:
+                documents.append(document)
             for x in positions:
                 pos = x.strip()
                 if (document not in index[word]):
                     index[word][document]=[pos]
                 else:
                     index[word][document].append(pos)
-    return index
+    return index,documents
 
 def main():
     readSamples()
