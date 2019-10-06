@@ -1,5 +1,5 @@
 import sys
-import lab2InvertedIndex as indexes
+import lab2Indexes as indexes
 from stemming.porter2 import stem
 
 collections =["sample","trec.sample"]
@@ -17,7 +17,7 @@ def and_operator(var1,var2,index):
             return []
         else:
             return list(set(var1) & set(index[var2].keys()))
-    elif (type(var2) == set) & (type(var1) ==  str):
+    elif (type(var2) == list) & (type(var1) ==  str):
         if (var1 not in index):
             return []
         else:
@@ -40,10 +40,11 @@ def or_operator(var1,var2,index):
             return []
         else:
             return list(set(var1) | set(index[var2].keys()))
-    elif (type(var2) == set) & (type(var1) ==  str):
+    elif (type(var2) == list) & (type(var1) ==  str):
         if (var1 not in index):
             return []
         else:
+            print(index[var1].keys())
             return list(set(var2) | set(index[var1].keys()))
     else:
         return list(set(var1) | set(var2))
@@ -58,19 +59,29 @@ def find_phrase (sets):
     phrase = "_".join(sets)
     if (len(sets)==2):
         for collection in collections:
+            print(phrase)
             index,documents = indexes.read_n_gram_index(collection,2)
-            print(collection+":"+index[phrase].keys())
-        else:
-            indexes.build_n_gram(len(sets))
-            for collection in collections:
-                index,documents = indexes.read_n_gram_index(collection,len(sets))
-                print(collection+":"+index[phrase].keys())
+            if phrase in index:
+                print(index[phrase].keys())
+            else:
+                print("No search results")
+    else:
+        indexes.build_n_gram(len(sets))
+        for collection in collections:
+            index,documents = indexes.read_n_gram_index(collection,len(sets))
+            if phrase in index:
+                print(index[phrase].keys())
+            else:
+                print("No search results")
 
 def set_up_sets_and_operators(arguments):
+    global sets,operands
+    sets = []
+    operands = []
     oper_types = ["AND","OR","NOT","OR NOT","AND NOT"]
     previous = False
+    phrase = False
     for x in arguments:
-        x = stem(x)
         if x in oper_types:
             if (x == "AND"):
                 previous = "AND"
@@ -87,13 +98,26 @@ def set_up_sets_and_operators(arguments):
                 if previous == "AND":
                     previous = False
                     operators.append("AND")
+                    operators.append(x)
                 elif previous == "OR":
                     previous = False                    
                     operators.append("OR")
+                    operators.append(x)
+                else:
+                    operators.append(x)
+                if previous == "\"" and x =="\"":
+                    operators.append(phrase)
+                    phrase = False
+                elif previous != False and x!="\"":
+                    if phrase == True:
+                        phrase = x
+                    else:
+                        phrase = phrase + x
+                elif previous == False and x == "\"":
+                    phrase = True
 
-                operators.append(x)
         else: 
-            sets.append(x)
+            sets.append(x.lower())
             if previous != False:
                 if previous == "AND":
                         previous = False
@@ -101,12 +125,16 @@ def set_up_sets_and_operators(arguments):
                 elif previous == "OR":
                         previous = False                    
                         operators.append("OR")
+                elif previous == "NOT":
+                        previous = False                    
+                        operators.append("NOT")
 
 def find_matches(arguments):
     global sets,operators
+    sets = []
+    operators = []
     set_up_sets_and_operators(arguments)
-    print("sets:",sets,"opers:",operators)
-
+    print("sets:"+str(sets)+"opers:"+str(operators))
     if (len(operators) == 0 and len(sets)>1): 
         # phrase
         return find_phrase(sets)
@@ -117,19 +145,24 @@ def find_matches(arguments):
             if (sets[0] in index):
                 print (index[sets[0]].keys())
             else: 
-                print([])
+                print("No search results")
     else:
         # logical expression
         for collection in collections:
             sets_copy=sets.copy()
             operators_copy = operators.copy()
             index,documents = indexes.read_inverted_index(collection)
+            for i,x in enumerate(sets_copy):
+                sets_copy[i] = stem(x)
+
             while (len(operators_copy)!=0):
+                print("sets:"+str(sets_copy)+"opers:"+str(operators_copy))
                 oper = operators_copy.pop(0)
                 if (oper == "NOT"):
-                    var = sets.pop(0)
+                    var = sets_copy.pop(0)
                     docs = not_operator(var,index,documents)
-                    sets_copy.append(list(docs))
+                    if docs != None:
+                        sets_copy.append(list(docs))
                 elif (oper == "AND NOT"):
                     sets_copy.insert(0,and_operator(sets_copy.pop(0),not_operator(sets_copy.pop(0),index,documents),index))
                 elif (oper == "OR NOT"):
@@ -138,18 +171,16 @@ def find_matches(arguments):
                     sets_copy.insert(0,and_operator(sets_copy.pop(0),sets_copy.pop(0),index))
                 elif (oper == "OR"):
                     sets_copy.insert(0,or_operator(sets_copy.pop(0),sets_copy.pop(0),index))
-            print(sets_copy)
-
+            if (sets_copy == [[]]):
+                print("No search results")
+            else:
+                print(sets_copy)
 
 def main(arguments):
     while True:
-        global operators,sets
-        operators = []
-        sets = []
         query= input("Search for: ")
         find_matches(query.split())
-        # for x in find_matches(query.split()):
-        #     print (x)
+        print ( "-------------------------")
     
 if __name__ == "__main__" :
     main(sys.argv)
