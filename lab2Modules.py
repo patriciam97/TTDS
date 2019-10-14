@@ -5,6 +5,7 @@ from stemming.porter2 import stem
 collections =["sample","trec.sample"]
 operators = []
 sets = []
+stemming = True
 
 def and_operator(var1,var2,index):
     if (type(var1)!=list) & (type(var2)!=list):
@@ -56,21 +57,22 @@ def not_operator(var,index,documents):
         return None
 
 def find_phrase (sets):
+    global stemming
     phrase = "_".join(sets)
     if (len(sets)==2):
         for collection in collections:
             print(phrase)
-            index,documents = indexes.read_n_gram_index(collection,2)
+            index,documents = indexes.read_n_gram_index(collection,2,stemming)
             if phrase in index:
-                print(index[phrase].keys())
+                print(list(index[phrase].keys()))
             else:
                 print("No search results")
     else:
         indexes.build_n_gram(len(sets))
         for collection in collections:
-            index,documents = indexes.read_n_gram_index(collection,len(sets))
+            index,documents = indexes.read_n_gram_index(collection,len(sets),stemming)
             if phrase in index:
-                print(index[phrase].keys())
+                print(list(index[phrase].keys()))
             else:
                 print("No search results")
 
@@ -130,7 +132,7 @@ def set_up_sets_and_operators(arguments):
                         operators.append("NOT")
 
 def find_matches(arguments):
-    global sets,operators
+    global sets,operators,stemming
     sets = []
     operators = []
     set_up_sets_and_operators(arguments)
@@ -141,9 +143,9 @@ def find_matches(arguments):
     elif (len(operators) == 0 and len(sets)==1):
         # just one word
         for collection in collections:
-            index,documents = indexes.read_inverted_index(collection)
-            if (sets[0] in index):
-                print (index[sets[0]].keys())
+            index,documents = indexes.read_inverted_index(collection,stemming)
+            if (sets[0]) in index:
+                print (list(index[sets[0]].keys()))
             else: 
                 print("No search results")
     else:
@@ -151,7 +153,7 @@ def find_matches(arguments):
         for collection in collections:
             sets_copy=sets.copy()
             operators_copy = operators.copy()
-            index,documents = indexes.read_inverted_index(collection)
+            index,documents = indexes.read_inverted_index(collection,stemming)
             for i,x in enumerate(sets_copy):
                 sets_copy[i] = stem(x)
 
@@ -174,9 +176,17 @@ def find_matches(arguments):
             if (sets_copy == [[]]):
                 print("No search results")
             else:
-                print(sets_copy)
+                print(sets_copy[0])
 
 def main(arguments):
+    global stemming
+    stemming = input("Want to use Porter Stemming?")
+    if stemming.lower() == "no":
+        stemming = False
+        print("Stemming set to False.")
+    else:
+        stemming = True
+        print("Stemming set to True.")
     while True:
         query= input("Search for: ")
         find_matches(query.split())
