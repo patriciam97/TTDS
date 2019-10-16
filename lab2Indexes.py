@@ -20,11 +20,11 @@ def read_samples():
         index = {}
         documents = []
         f = open("collections/"+collection+".txt")
-        for x in f:
+        for x in f.readlines():
             if "ID:" in x:
                 doc_id = x.split(":")[1].strip()
-            else:
-                text = x.split(":")[1]
+            if "TEXT:" in x:
+                text = x[5:].strip()
                 process_text(doc_id,text)
         save_inverted_index(collection)
 
@@ -65,14 +65,18 @@ def process_text_for_n_gram(doc_id,text,n):
     text = text.split()
     arr = []
     processedPhrases = []
+    processedPhrasesNoStem = []
     for i,word in enumerate(text,0):
         if i<(len(text)-n+1):
             arr.append(sub_array(text,i,n))
     for pair in arr:
+        pair = [x.strip().replace(",","").replace(".","") for x in pair]
+        phrase = "_".join(pair)
+        processedPhrasesNoStem.append(phrase)
+        pair = [ stem(x) if len(x)>3 else x for x in pair]
         phrase = "_".join(pair)
         processedPhrases.append(phrase)
-    generate_index(doc_id,processedPhrases,processedPhrases)
-    return processedPhrases
+    generate_index(doc_id,processedPhrases,processedPhrasesNoStem)
 
 def build_n_gram(n): 
     # words are unprocessed
@@ -83,26 +87,19 @@ def build_n_gram(n):
             if "ID:" in x:
                 doc_id = x.split(":")[1].strip()
             else:
-                text = x.split(":")[1]
+                text = x[5:].strip()
                 process_text_for_n_gram(doc_id,text,n)
         save_n_gram_index(collection,n)
 
 def process_text(doc_id,text):
     processedWords= []
     processedWordsWithoutStem= []
-    unprocessedWords = 0
-    unique = {}
     regex = re.compile('[^a-zA-Z]')
-    for word in text.split():
-        unprocessedWords+=1
-        if word not in unique:
-            unique[word] = 1
-        else:
-            unique[word] = unique.get(word)+1
+    for word in text.split(" "):
         token = regex.sub('',word.lower())
         if token not in stop:
-            if stem(token).strip() != "":
-                processedWords.append(stem(token).strip())
+            if stem(token.strip()) != "":
+                processedWords.append(stem(token.strip()))
             processedWordsWithoutStem.append(token.strip())
     generate_index(doc_id,processedWords,processedWordsWithoutStem)
 
@@ -168,15 +165,22 @@ def read_inverted_index(title,stemming):
 
 def read_n_gram_index(title,n,stemming):
     if not stemming :
-        title = "indexes/gram/"+title+"_"+str(n)+"no_Stem.txt"
+        title = "indexes/gram/"+title+"_"+str(n)+"_no_Stem.txt"
     else:
         title = "indexes/gram/"+title+"_"+str(n)+".txt"
     f = open(title)
     print(title+":")
     return read_index(f)
 
+def initialize():
+    global index,indexNoStem,documents
+    index = {}
+    indexNoStem = {}
+    documents = []
+
 def main():
     build_inverted_index()
+    initialize()
     build_n_gram(2)
 
 if __name__ == "__main__" :
