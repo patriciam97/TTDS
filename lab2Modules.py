@@ -8,9 +8,9 @@ sets = []
 stemming = True
 currentCollection=""
 def and_operator(var1,var2,index):
-    if (len(var1.split(" ")) >1):
-        var1 = findPhraseInIndex(var1)
-    if (len(var2.split(" ")) >1):
+    if type(var1) != list and (len(var1.split(" ")) >1):
+            var1 = findPhraseInIndex(var1)
+    if type(var2) != list and (len(var2.split(" ")) >1):
         var2 = findPhraseInIndex(var2)
     if (type(var1)!=list) & (type(var2)!=list):
         if (var1 not in index) or (var2 not in index):
@@ -31,9 +31,9 @@ def and_operator(var1,var2,index):
         return list(set(var1) & set(var2))
 
 def or_operator(var1,var2,index):
-    if (len(var1.split(" ")) >1):
-        var1 = findPhraseInIndex(var1)
-    if (len(var2.split(" ")) >1):
+    if type(var1) != list and (len(var1.split(" ")) >1):
+            var1 = findPhraseInIndex(var1)
+    if type(var2) != list and (len(var2.split(" ")) >1):
         var2 = findPhraseInIndex(var2)
     if (type(var1)!=list) & (type(var2)!=list):
         if (var1 not in index) and (var2 not in index):
@@ -256,9 +256,17 @@ def find_matches(arguments):
                         if docs != None:
                             sets_copy.append(list(docs))
                     elif (oper == "AND NOT"):
-                        sets_copy.insert(0,and_operator(sets_copy.pop(0),not_operator(sets_copy.pop(0),index,documents),index))
+                        not_docs = not_operator(sets_copy.pop(0),index,documents)
+                        if not_docs != None:
+                            sets_copy.insert(0,and_operator(sets_copy.pop(0),not_docs,index))
+                        else:
+                            sets_copy.insert(0,[])
                     elif (oper == "OR NOT"):
-                        sets_copy.insert(0,or_operator(sets_copy.pop(0),not_operator(sets_copy.pop(0),index,documents),index))
+                        not_docs = not_operator(sets_copy.pop(0),index,documents)
+                        if not_docs != None:
+                            sets_copy.insert(0,or_operator(sets_copy.pop(0),not_docs,index))
+                        else:
+                            sets_copy.insert(0,[])
                     elif (oper == "AND"):
                         sets_copy.insert(0,and_operator(sets_copy.pop(0),sets_copy.pop(0),index))
                     elif (oper == "OR"):
