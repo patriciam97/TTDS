@@ -9,7 +9,7 @@ stemming = True
 currentCollection=""
 def and_operator(var1,var2,index):
     if type(var1) != list and (len(var1.split(" ")) >1):
-            var1 = findPhraseInIndex(var1)
+        var1 = findPhraseInIndex(var1)
     if type(var2) != list and (len(var2.split(" ")) >1):
         var2 = findPhraseInIndex(var2)
     if (type(var1)!=list) & (type(var2)!=list):
@@ -202,9 +202,9 @@ def proximitySearch(dist,var1,var2):
                             results.append(doc)
                             break
                         if val2_pos > val1_pos:
-                            var2_docs_iterator += 1
-                        elif val2_pos < val1_pos:
                             var1_docs_iterator += 1
+                        elif val2_pos < val1_pos:
+                            var2_docs_iterator += 1
                         else:
                             var1_docs_iterator += 1
                             var2_docs_iterator += 1

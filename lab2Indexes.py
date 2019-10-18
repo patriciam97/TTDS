@@ -66,11 +66,12 @@ def process_text_for_n_gram(doc_id,text,n):
     arr = []
     processedPhrases = []
     processedPhrasesNoStem = []
+    regex = re.compile('[^a-zA-Z]')
     for i,word in enumerate(text,0):
         if i<(len(text)-n+1):
             arr.append(sub_array(text,i,n))
     for pair in arr:
-        pair = [x.strip().replace(",","").replace(".","") for x in pair]
+        pair = [regex.sub('',x.lower()).strip() for x in pair]
         phrase = "_".join(pair)
         processedPhrasesNoStem.append(phrase)
         pair = [ stem(x) if len(x)>3 else x for x in pair]
