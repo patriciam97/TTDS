@@ -2,38 +2,59 @@ import re
 from stemming.porter2 import stem
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+import itertools
+import xml.etree.ElementTree as ET
 
 stop = []
 index = {}
 indexNoStem = {}
 documents = []
 collections =["sample","trec.sample"]
+current_collection = collections[1]
 
 def read_stop_words():
+    # collect stop words
     f = open ("stopWords.txt")
     for x in f.readlines():
         stop.append(x.strip())
     f.close()
+    
+def is_empty_string(word):
+    return word == ""
+def filter_out_stop_words(words, stop_words):
+    return list(filter(lambda word: word not in stop_words and not is_empty_string(word), words))
+    
+def read_samples(ngram):
+    # reads xml file and sends doc_id, content(heading and text) to the process_text function
+    global current_collection,index,documents,stop
+    index = {}
+    documents = []
+    f = open("../collections/"+current_collection+".xml")
+    it = itertools.chain('<root>', f, '</root>')
+    root = ET.fromstringlist(it)
+    for doc in list(root):
+        doc_id, headline, text = doc.find('DOCNO').text, doc.find('HEADLINE'), doc.find('TEXT')
+        # filter out stop words from content after tokenization
+        content = ""
+        if headline!= None:
+            content = content+" "+headline.text
+        if text!= None:
+            content = content+" "+text.text
+        content = filter_out_stop_words([word.lower() for word in content.split()],stop)
+        if not ngram:
+            process_text(doc_id,content)
+            # saves the inverted index
+            save_inverted_index(current_collection)
+        else:
+            process_text_for_n_gram(doc_id,content,ngram)
+            save_n_gram_index(current_collection,ngram)
 
-def read_samples():
-    global collections,index,documents
-    for collection in collections:
-        index = {}
-        documents = []
-        f = open("../collections/"+collection+".txt")
-        for x in f.readlines():
-            if "ID:" in x:
-                doc_id = x.split(":")[1].strip()
-            if "TEXT:" in x:
-                text = x[5:].strip()
-                process_text(doc_id,text)
-        save_inverted_index(collection)
-
-def build_inverted_index ():
-    read_samples()
+def build_inverted_index():
+    read_samples(False)
     
 def generate_index(doc_id,words,wordsNoStemming): 
-    # words are processed - tokenize, stopping and stemming
+    # words are processed - tokenize and stemming
+    # have 2 index one with stemming one without to compare results later
     for i,word in enumerate(words,0):
         if word not in index:
             # first push
@@ -63,7 +84,7 @@ def sub_array(arr,start,n):
     return result
 
 def process_text_for_n_gram(doc_id,text,n):
-    text = text.split()
+    # gets n pairs appends them with underscore a
     arr = []
     processedPhrases = []
     processedPhrasesNoStem = []
@@ -81,24 +102,14 @@ def process_text_for_n_gram(doc_id,text,n):
     generate_index(doc_id,processedPhrases,processedPhrasesNoStem)
 
 def build_n_gram(n): 
-    # words are unprocessed
-    global collections
-    for collection in collections:
-        f = open("../collections/"+collection+".txt")
-        for x in f:
-            if "ID:" in x:
-                doc_id = x.split(":")[1].strip()
-            else:
-                text = x[5:].strip()
-                process_text_for_n_gram(doc_id,text,n)
-        save_n_gram_index(collection,n)
+    read_samples(n)
 
 def process_text(doc_id,text):
     processedWords= []
     processedWordsWithoutStem= []
     regex = re.compile('[^a-zA-Z]')
-    for word in text.split(" "):
-        token = regex.sub('',word.lower())
+    for word in text:
+        token = regex.sub('',word)
         if token not in stop:
             if stem(token.strip()) != "":
                 processedWords.append(stem(token.strip()))
@@ -143,7 +154,7 @@ def read_index(f):
             word = line.split(":")[0]
             index[word]={}
         else:
-            docmuent = line.split(":")[0].strip()
+            document = line.split(":")[0].strip()
             positions =line.split(":")[1].split(",")
             if document not in documents:
                 documents.append(document)

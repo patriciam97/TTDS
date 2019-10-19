@@ -1,5 +1,5 @@
 import sys
-import lab2Indexes as indexes
+import preprocessing as indexes
 from stemming.porter2 import stem
 
 collections =["sample","trec.sample"]
