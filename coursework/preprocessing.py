@@ -8,8 +8,8 @@ import xml.etree.ElementTree as ET
 stop = []
 index = {}
 documents = []
-collections =["sample","trec.sample"]
-current_collection = collections[1]
+collections =["sample","trec.sample","trec.5000"]
+current_collection = collections[2]
 
 def read_stop_words():
     # collect stop words
@@ -27,8 +27,6 @@ def filter_out_stop_words(words, stop_words):
 def read_samples(ngram):
     # reads xml file and sends doc_id, content(heading and text) to the process_text function
     global current_collection,index,documents,stop
-    index = {}
-    documents = []
     f = open("../collections/"+current_collection+".xml")
     it = itertools.chain('<root>', f, '</root>')
     root = ET.fromstringlist(it)
@@ -126,7 +124,9 @@ def save_index():
 #         for doc in index[word]:
 #             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
 
-def read_index(f):
+def read_index():
+    title = "index.txt"
+    f = open(title)
     index = {}
     documents = []
     for line in f:
@@ -166,7 +166,6 @@ def initialize():
 def main():
     read_stop_words()
     build_inverted_index()
-    # initialize()
     build_n_gram(2)
     save_index()
 

@@ -279,12 +279,12 @@ def output_results():
 
 def parseQueries():
     global results
-    title = "queries_1.txt"
+    title = "queries.boolean.txt"
     f = open(title)
     for line in f.readlines():
-        parts = line.strip().split(":")
-        query_num = line[:2].strip()
-        query = str(line[4:].strip())
+        parts = line.strip().split(" ")
+        query_num = parts[0]
+        query = [word.strip() for word in parts[1:]]
         find_matches(query_num,query.split(" "))
     output_results()
 
