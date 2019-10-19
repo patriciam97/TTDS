@@ -11,8 +11,9 @@ collections =["sample","trec.sample"]
 
 def read_stop_words():
     f = open ("stopWords.txt")
-    for x in f:
+    for x in f.readlines():
         stop.append(x.strip())
+    f.close()
 
 def read_samples():
     global collections,index,documents
@@ -156,9 +157,9 @@ def read_index(f):
 
 def read_inverted_index(title,stemming):
     if not stemming :
-        title = "indexes/inverted_Index/"+title+"_no_Stem.txt"
+        title = "../indexes/inverted_Index/"+title+"_no_Stem.txt"
     else: 
-        title = "indexes/inverted_Index/"+title+".txt"
+        title = "../indexes/inverted_Index/"+title+".txt"
     f = open(title)
     print(title+":")
     return read_index(f)
@@ -166,11 +167,11 @@ def read_inverted_index(title,stemming):
 
 def read_n_gram_index(title,n,stemming):
     if not stemming :
-        title = "indexes/gram/"+title+"_"+str(n)+"_no_Stem.txt"
+        title = "../indexes/gram/"+title+"_"+str(n)+"_no_Stem.txt"
     else:
-        title = "indexes/gram/"+title+"_"+str(n)+".txt"
+        title = "../indexes/gram/"+title+"_"+str(n)+".txt"
     f = open(title)
-    print(title+":")
+    # print(title+":")
     return read_index(f)
 
 def initialize():
@@ -180,6 +181,7 @@ def initialize():
     documents = []
 
 def main():
+    read_stop_words()
     build_inverted_index()
     initialize()
     build_n_gram(2)
