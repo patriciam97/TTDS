@@ -6,7 +6,7 @@ collections =["sample","trec.sample"]
 operators = []
 sets = []
 currentCollection= collections[1]
-
+results = []
 def and_operator(var1,var2,index):
     # and operator between 2 variables, 2 lists or 1 list and 1 variable
 
@@ -97,16 +97,15 @@ def findPhraseInIndex(phrase):
 
 
 
-def find_phrase (sets):
-    global currentCollection
+def find_phrase (q_num,sets):
+    global currentCollection,results
     phrase = "_".join([stem(x) for x in sets])
 
     if (len(sets)>2):
         indexes.build_n_gram(len(sets))
-
     index,documents = indexes.read_n_gram_index(currentCollection,len(sets))
     if phrase in index:
-        return (list(index[phrase].keys()))
+        results.append([q_num,list(index[phrase].keys())])
     else:
         print("No search results")
   
@@ -181,9 +180,9 @@ def set_up_sets_and_operators(arguments):
                         previous = False                    
                         operators.append("NOT")
 
-def proximitySearch(dist,var1,var2):
-    global currentCollection
-    results = []
+def proximitySearch(q_num,dist,var1,var2):
+    global currentCollection,results
+    docs = []
     var1 = stem(var1)
     var2 = stem(var2)
     index,documents = indexes.read_inverted_index(currentCollection)
@@ -198,7 +197,7 @@ def proximitySearch(dist,var1,var2):
                 val1_pos = int(index[var1][doc][var1_docs_iterator])
                 val2_pos = int(index[var2][doc][var2_docs_iterator])
                 if abs(val1_pos - val2_pos) <= int(dist):
-                    results.append(doc)
+                    docs.append(doc)
                     break
                 if val2_pos > val1_pos:
                     var1_docs_iterator += 1
@@ -207,30 +206,31 @@ def proximitySearch(dist,var1,var2):
                 else:
                     var1_docs_iterator += 1
                     var2_docs_iterator += 1
-    return(results)
+    results.append([q_num,docs])
 
-def find_matches(arguments):
-    global sets,operators,currentCollection
+def find_matches(q_num,arguments):
+    global sets,operators,currentCollection,results
     sets = []
     operators = []
     if (arguments[0].startswith("#",0)):
         # parses proximity search and sends it to the specified function
         dist=arguments[0][1:].split("(")[0]
         var1=arguments[0].split("(")[1].split(",")[0].strip()
-        var2=arguments[0].split(",")[1].split(")")[0].strip()
-        print(proximitySearch(dist,var1,var2))
+        var2=arguments[1].split(")")[0].strip()
+        proximitySearch(q_num,dist,var1,var2)
     else:
         set_up_sets_and_operators(arguments)
         # need to set up sets and operators for search
         if (len(operators) == 0 and len(sets)==1):
-            # just one word
+            # just one element in set
             if (len(sets[0].split(" "))>1):
-                print(find_phrase(sets[0].split(" ")))
+                # phrase
+                find_phrase(q_num,sets[0].split(" "))
             else:
                 index,documents = indexes.read_inverted_index(currentCollection)
                 word = stem(sets[0])
                 if (word) in index:
-                    print (list(index[word].keys()))
+                    results.append([q_num,list(index[word].keys())])
                 else: 
                     print("No search results")
         else:
@@ -263,16 +263,33 @@ def find_matches(arguments):
                     sets_copy.insert(0,and_operator(sets_copy.pop(0),sets_copy.pop(0),index))
                 elif (oper == "OR"):
                     sets_copy.insert(0,or_operator(sets_copy.pop(0),sets_copy.pop(0),index))
+            # append in my results
             if (sets_copy == [[]]):
                 print("No search results")
             else:
-                print(sets_copy[0])
+                results.append([q_num,sets_copy[0]])
+
+def output_results():
+    global results
+    file_Title= "results.boolean.txt"
+    f = open(file_Title,"w+")
+    for q_id,docs in results:
+        for doc in docs:
+            f.write(q_id[1:]+" 0 "+doc+" 0 1 0\n")
+
+def parseQueries():
+    global results
+    title = "queries_1.txt"
+    f = open(title)
+    for line in f.readlines():
+        parts = line.strip().split(":")
+        query_num = line[:2].strip()
+        query = str(line[4:].strip())
+        find_matches(query_num,query.split(" "))
+    output_results()
 
 def main(arguments):
-    while True:
-        query= input("Search for: ")
-        find_matches(query.split())
-        print ( "-------------------------")
+        parseQueries()
     
 if __name__ == "__main__" :
     main(sys.argv)

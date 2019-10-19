@@ -43,11 +43,8 @@ def read_samples(ngram):
         content = filter_out_stop_words([word.lower() for word in content.split()],stop)
         if not ngram:
             process_text(doc_id,content)
-            # saves the inverted index
-            save_inverted_index(current_collection)
         else:
             process_text_for_n_gram(doc_id,content,ngram)
-            save_n_gram_index(current_collection,ngram)
 
 def build_inverted_index():
     read_samples(False)
@@ -105,21 +102,29 @@ def process_text(doc_id,text):
             processedWordsWithoutStem.append(token.strip())
     generate_index(doc_id,processedWords)
 
-def save_inverted_index(title):
-    file_Title= "preprocessing/inverted_Index/"+title+".txt"
+def save_index():
+    file_Title= "index.txt"
     f = open(file_Title,"w+")
     for word in index:
         f.write("%s:\n" % word)
         for doc in index[word]:
             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
 
-def save_n_gram_index(title,n):
-    file_Title= "preprocessing/gram/"+title+"_"+str(n)+".txt"
-    f = open(file_Title,"w+")
-    for word in index:
-        f.write("%s:\n" % word)
-        for doc in index[word]:
-            f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
+# def save_inverted_index(title):
+#     file_Title= "preprocessing/inverted_Index/"+title+".txt"
+#     f = open(file_Title,"w+")
+#     for word in index:
+#         f.write("%s:\n" % word)
+#         for doc in index[word]:
+#             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
+
+# def save_n_gram_index(title,n):
+#     file_Title= "preprocessing/gram/"+title+"_"+str(n)+".txt"
+#     f = open(file_Title,"w+")
+#     for word in index:
+#         f.write("%s:\n" % word)
+#         for doc in index[word]:
+#             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
 
 def read_index(f):
     index = {}
@@ -141,16 +146,17 @@ def read_index(f):
                     index[word][document].append(pos)
     return index,documents
 
-def read_inverted_index(title):
-    title = "preprocessing/inverted_Index/"+title+".txt"
-    f = open(title)
-    return read_index(f)
+
+# def read_inverted_index(title):
+#     title = "preprocessing/inverted_Index/"+title+".txt"
+#     f = open(title)
+#     return read_index(f)
         
 
-def read_n_gram_index(title,n):
-    title = "preprocessing/gram/"+title+"_"+str(n)+".txt"
-    f = open(title)
-    return read_index(f)
+# def read_n_gram_index(title,n):
+#     title = "preprocessing/gram/"+title+"_"+str(n)+".txt"
+#     f = open(title)
+#     return read_index(f)
 
 def initialize():
     global index,documents
@@ -160,8 +166,9 @@ def initialize():
 def main():
     read_stop_words()
     build_inverted_index()
-    initialize()
+    # initialize()
     build_n_gram(2)
+    save_index()
 
 if __name__ == "__main__" :
     main()
