@@ -58,7 +58,7 @@ def output_results():
 
 def read_queries():
     global results
-    title = "queries_2.txt"
+    title = "queries.ranked.txt"
     f = open(title)
     for line in f.readlines():
         parts = line.strip().split(" ")

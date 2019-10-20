@@ -7,9 +7,10 @@ operators = []
 sets = []
 currentCollection= collections[1]
 results = []
-def and_operator(var1,var2,index):
+index,documents = indexes.read_index()
+def and_operator(var1,var2):
+    global index
     # and operator between 2 variables, 2 lists or 1 list and 1 variable
-
     # check if var1 or var 2 is a phrase eg. "middle east"
     if type(var1) != list and (len(var1.split(" ")) >1):
         var1 = findPhraseInIndex(var1)   
@@ -34,7 +35,8 @@ def and_operator(var1,var2,index):
     else:
         return list(set(var1) & set(var2))
 
-def or_operator(var1,var2,index):
+def or_operator(var1,var2):
+    global index
     # or operator between 2 variables, 2 lists or 1 list and 1 variable
     if type(var1) != list and (len(var1.split(" ")) >1):
             var1 = findPhraseInIndex(var1)
@@ -63,12 +65,12 @@ def or_operator(var1,var2,index):
     else:
         return list(set(var1) | set(var2))
         
-def not_operator(var,index,documents):
+def not_operator(var):
+    global index,documents
     # not operator for either a list of documents or a variable
     if (len(var.split(" "))>1):
         #  if its NOT "middle east"
         var = findPhraseInIndex(var)
-
     if (type(var)==list):
         return list(set(documents) ^ set(var))
     else:
@@ -79,17 +81,7 @@ def not_operator(var,index,documents):
 
 def findPhraseInIndex(phrase):
     # used in bigram
-    global currentCollection
-    phrase = phrase.split(" ")
-
-    if (len(phrase)>=2):
-        if (len(phrase)>2):
-            indexes.build_n_gram(len(phrase))
-        phrase = "_".join([stem(x) for x in phrase])
-        index,documents = indexes.read_n_gram_index(currentCollection,2)
-    elif (len(phrase)==1):
-        index,documents = indexes.read_inverted_index(currentCollection)
-
+    global currentCollection,index
     if phrase in index:
         return (list(index[phrase].keys()))
     else:
@@ -98,18 +90,15 @@ def findPhraseInIndex(phrase):
 
 
 def find_phrase (q_num,sets):
-    global currentCollection,results
+    global currentCollection,results,index
     phrase = "_".join([stem(x) for x in sets])
-
     if (len(sets)>2):
-        indexes.build_n_gram(len(sets))
-    index,documents = indexes.read_n_gram_index(currentCollection,len(sets))
+        return
     if phrase in index:
         results.append([q_num,list(index[phrase].keys())])
     else:
         print("No search results")
   
-
 def set_up_sets_and_operators(arguments):
     global sets,operands
     sets = []
@@ -153,7 +142,6 @@ def set_up_sets_and_operators(arguments):
                         phrase = phrase + x
                 elif previous == False and x == "\"":
                     phrase = True
-
         else: 
             if (("\"" not in x) and isPhrase == True):
                 phraseInQuotes = phraseInQuotes+" "+x
@@ -181,11 +169,10 @@ def set_up_sets_and_operators(arguments):
                         operators.append("NOT")
 
 def proximitySearch(q_num,dist,var1,var2):
-    global currentCollection,results
+    global currentCollection,results,index,documents
     docs = []
     var1 = stem(var1)
     var2 = stem(var2)
-    index,documents = indexes.read_inverted_index(currentCollection)
     if (var1 in index) and (var2 in index):
         var1_docs = set(index[var1].keys())
         var2_docs = set(index[var2].keys())
@@ -209,14 +196,16 @@ def proximitySearch(q_num,dist,var1,var2):
     results.append([q_num,docs])
 
 def find_matches(q_num,arguments):
-    global sets,operators,currentCollection,results
+    global sets,operators,currentCollection,results,index,documents
     sets = []
     operators = []
     if (arguments[0].startswith("#",0)):
+        arguments = " ".join(arguments)
+        print(arguments)
         # parses proximity search and sends it to the specified function
-        dist=arguments[0][1:].split("(")[0]
-        var1=arguments[0].split("(")[1].split(",")[0].strip()
-        var2=arguments[1].split(")")[0].strip()
+        dist = arguments[1:].split("(")[0]
+        var1 = arguments.split("(")[1].split(",")[0].strip()
+        var2 = arguments.split(")")[0].strip()
         proximitySearch(q_num,dist,var1,var2)
     else:
         set_up_sets_and_operators(arguments)
@@ -227,7 +216,6 @@ def find_matches(q_num,arguments):
                 # phrase
                 find_phrase(q_num,sets[0].split(" "))
             else:
-                index,documents = indexes.read_inverted_index(currentCollection)
                 word = stem(sets[0])
                 if (word) in index:
                     results.append([q_num,list(index[word].keys())])
@@ -237,32 +225,31 @@ def find_matches(q_num,arguments):
             # logical expression
             sets_copy=sets.copy()
             operators_copy = operators.copy()
-            index,documents = indexes.read_inverted_index(currentCollection)
             for i,x in enumerate(sets_copy):
                 sets_copy[i] = stem(x)
             while (len(operators_copy)!=0):
                 oper = operators_copy.pop(0)
                 if (oper == "NOT"):
                     var = sets_copy.pop(0)
-                    docs = not_operator(var,index,documents)
+                    docs = not_operator(var)
                     if docs != None:
                         sets_copy.append(list(docs))
                 elif (oper == "AND NOT"):
-                    not_docs = not_operator(sets_copy.pop(0),index,documents)
+                    not_docs = not_operator(sets_copy.pop(0))
                     if not_docs != None:
-                        sets_copy.insert(0,and_operator(sets_copy.pop(0),not_docs,index))
+                        sets_copy.insert(0,and_operator(sets_copy.pop(0),not_docs))
                     else:
                         sets_copy.insert(0,[])
                 elif (oper == "OR NOT"):
-                    not_docs = not_operator(sets_copy.pop(0),index,documents)
+                    not_docs = not_operator(sets_copy.pop(0))
                     if not_docs != None:
-                        sets_copy.insert(0,or_operator(sets_copy.pop(0),not_docs,index))
+                        sets_copy.insert(0,or_operator(sets_copy.pop(0),not_docs))
                     else:
                         sets_copy.insert(0,[])
                 elif (oper == "AND"):
-                    sets_copy.insert(0,and_operator(sets_copy.pop(0),sets_copy.pop(0),index))
+                    sets_copy.insert(0,and_operator(sets_copy.pop(0),sets_copy.pop(0)))
                 elif (oper == "OR"):
-                    sets_copy.insert(0,or_operator(sets_copy.pop(0),sets_copy.pop(0),index))
+                    sets_copy.insert(0,or_operator(sets_copy.pop(0),sets_copy.pop(0)))
             # append in my results
             if (sets_copy == [[]]):
                 print("No search results")
@@ -285,8 +272,8 @@ def parseQueries():
         parts = line.strip().split(" ")
         query_num = parts[0]
         query = [word.strip() for word in parts[1:]]
-        find_matches(query_num,query.split(" "))
-    output_results()
+        find_matches(query_num,query)
+    # output_results()
 
 def main(arguments):
         parseQueries()
