@@ -80,7 +80,7 @@ def not_operator(var):
             return None
 
 def findPhraseInIndex(phrase):
-    # used in bigram
+    # used in bigram to return the document numbers for the phrase given
     global currentCollection,index
     if phrase in index:
         return (list(index[phrase].keys()))
@@ -100,9 +100,11 @@ def find_phrase (q_num,sets):
         print("No search results")
   
 def set_up_sets_and_operators(arguments):
+    #creates 2 sets one for operators and one for variables that is used later to evaluate the logical expresiion
     global sets,operands
     sets = []
     operands = []
+    #operators allowed to be used
     oper_types = ["AND","OR","NOT","OR NOT","AND NOT"]
     previous = False
     phrase = False
@@ -116,9 +118,11 @@ def set_up_sets_and_operators(arguments):
                 previous = "OR"
             elif (previous != False):
                 if (x == "NOT" and previous == "AND"):
+                    #found an "and not"
                     operators.append("AND NOT")
                     previous = False
                 elif (x == "NOT" and previous == "OR"):
+                    #found an "or not"
                     operators.append("OR NOT")
                     previous = False
             else:
@@ -169,6 +173,7 @@ def set_up_sets_and_operators(arguments):
                         operators.append("NOT")
 
 def proximitySearch(q_num,dist,var1,var2):
+    #finds documents where both of the terms exist and their difference is less than or equal to dist
     global currentCollection,results,index,documents
     docs = []
     var1 = stem(var1)
@@ -227,7 +232,7 @@ def find_matches(q_num,arguments):
                     print("No search results")
                     return
         else:
-            # logical expression
+            # evaluaste the logical expression
             sets_copy=sets.copy()
             operators_copy = operators.copy()
             for i,x in enumerate(sets_copy):
@@ -264,6 +269,7 @@ def find_matches(q_num,arguments):
                 return
 
 def output_results():
+    #used to save the results in results.boolean.txt in the format given to us
     global results
     file_Title= "results.boolean.txt"
     f = open(file_Title,"w+")
@@ -272,6 +278,7 @@ def output_results():
             f.write("{0} {1} {2} {3} {4} {5}\n".format(q_id,0,doc,0,1,0))
 
 def parseQueries():
+    #reads the queries given to us in queris.boolean.txt
     global results
     title = "queries.boolean.txt"
     f = open(title)

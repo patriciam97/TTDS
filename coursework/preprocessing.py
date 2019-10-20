@@ -133,18 +133,6 @@ def read_index():
                     index[word][document].append(pos)
     return index,documents
 
-
-# def read_inverted_index(title):
-#     title = "preprocessing/inverted_Index/"+title+".txt"
-#     f = open(title)
-#     return read_index(f)
-        
-
-# def read_n_gram_index(title,n):
-#     title = "preprocessing/gram/"+title+"_"+str(n)+".txt"
-#     f = open(title)
-#     return read_index(f)
-
 def initialize():
     global index,documents
     index = {}

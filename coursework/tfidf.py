@@ -6,11 +6,12 @@ import collections
 import operator
 
 collections =["sample","trec.sample"]
-currentCollection = collections[1]
+currentCollection = collections[1]  #collection to be used
 stemming = True
 results = []
 index = {}
 documents = []
+
 def tf(t,d): 
     global index,documents
     # term frequency
@@ -26,6 +27,7 @@ def df(t):
 
 
 def weight(t,d,index,documents):
+    # term weight for docuement d
     try:
         return (1+log(tf(t,d),10))*log(len(documents)/df(t),10)
     except:
@@ -33,20 +35,27 @@ def weight(t,d,index,documents):
     
 def get_top_documents(phrase):
     global currentCollection,index,documents
+    #list of words in lower case after  stripping and stemming
     words = list(map(lambda word: stem(word.strip().lower()), phrase))
+    #documents where these words appeared
     docs = [index[word].keys() for word in words if word in index]
     scores = []        
     if len(docs) > 0:
         common_docs = set().union(*docs)
+        #union above gives all the documents where the terms appeared
         for doc in common_docs:
             score = 0
             for term in words:
-                score += weight(term,doc,index,documents)
-            scores.append((doc,score))
+                score += weight(term,doc,index,documents) 
+                #score of phrase for document doc
+            scores.append((doc,score)) 
     sorted_scores = sorted(scores, key=lambda x: x[1], reverse=True)
-    return (sorted_scores[:1000])
+    #sorts them in descending order and returns the top 1000
+    return (sorted_scores[:1000]) 
+
 
 def output_results():
+    #saves the scores in results.ranked.txt in the format given to us
     global results
     file_Title= "results.ranked.txt"
     f = open(file_Title,"w+")
@@ -56,6 +65,7 @@ def output_results():
 
 
 def read_queries():
+    #reads queries in queries.ranked.txt that were given to us
     global results
     title = "queries.ranked.txt"
     f = open(title)
