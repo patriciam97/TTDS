@@ -12,9 +12,11 @@ current_collection = collections[2]
 
 def read_stop_words():
     # collect stop words
+    global stop
     f = open ("stopWords.txt")
     stop = {}
     for x in f.readlines():
+        #save stop words in a global list
         stop[x.strip()] = 1
     f.close()
 
@@ -24,6 +26,7 @@ def filter_out_stop_words(words, stop_words):
 def read_samples(ngram):
     # reads xml file and sends doc_id, content(heading and text) to the process_text function
     global current_collection,index,documents,stop
+    #reads collection xml
     f = open("../collections/"+current_collection+".xml")
     it = itertools.chain('<root>', f, '</root>')
     root = ET.fromstringlist(it)
@@ -38,8 +41,10 @@ def read_samples(ngram):
         content = content.lower()
         content = filter_out_stop_words([word for word in content.split()],stop)
         if not ngram:
+            #process text for boolean,proximity and phrase search
             process_text(doc_id,content)
         else:
+            #process text for n grams where ngram is an int indicating n
             process_text_for_n_gram(doc_id,content,ngram)
 
 def build_inverted_index():
@@ -52,7 +57,7 @@ def generate_index(doc_id,words):
             # first push
             index[word] = {doc_id:[i]}
         else:
-            # more push
+            # not first push
             documents = index[word].keys()
             if doc_id not in documents:
                 index[word][doc_id]=[i]
@@ -69,7 +74,6 @@ def process_text_for_n_gram(doc_id,text,n):
     # gets n pairs appends them with underscore a
     arr = []
     processedPhrases = []
-    processedPhrasesNoStem = []
     regex = re.compile('[^a-zA-Z]')
     for i,word in enumerate(text,0):
         if i<(len(text)-n+1):
@@ -77,7 +81,6 @@ def process_text_for_n_gram(doc_id,text,n):
     for pair in arr:
         pair = [regex.sub('',x.lower()).strip() for x in pair]
         phrase = "_".join(pair)
-        processedPhrasesNoStem.append(phrase)
         pair = [ stem(x) if len(x)>3 else x for x in pair]
         phrase = "_".join(pair)
         processedPhrases.append(phrase)
@@ -88,14 +91,13 @@ def build_n_gram(n):
 
 def process_text(doc_id,text):
     processedWords= []
-    processedWordsWithoutStem= []
+    #regex to find everything that is non-alphabetic
     regex = re.compile('[^a-zA-Z]')
     for word in text:
         token = regex.sub('',word)
         if token not in stop:
             if stem(token.strip()) != "":
                 processedWords.append(stem(token.strip()))
-            processedWordsWithoutStem.append(token.strip())
     generate_index(doc_id,processedWords)
 
 def save_index():
@@ -107,13 +109,12 @@ def save_index():
             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
         f.write("\n")
     
-
-
 def read_index():
+    #reads index.txt back into memory
     title = "index.txt"
     f = open(title)
     index = {}
-    documents = []
+    documents = {}
     for line in f.readlines():
         if line=="\n": continue
         line = line.strip().split(":")
@@ -124,14 +125,14 @@ def read_index():
             document = line[0]
             positions = line[1].split(",")
             if document not in documents:
-                documents.append(document)
+                documents[document] = 1
             for x in positions:
                 pos = x.strip()
                 if (document not in index[word]):
                     index[word][document]=[pos]
                 else:
                     index[word][document].append(pos)
-    return index,documents
+    return index,list(documents.keys())
 
 def initialize():
     global index,documents

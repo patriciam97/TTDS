@@ -2,21 +2,21 @@ import sys
 import preprocessing as indexes
 from stemming.porter2 import stem
 
-collections =["sample","trec.sample"]
+collections =["sample","trec.sample","trec.5000"]
 operators = []
 sets = []
-currentCollection= collections[1]
+currentCollection= collections[2] #collection to be used
 results = []
 index,documents = indexes.read_index()
+
 def and_operator(var1,var2):
     global index
     # and operator between 2 variables, 2 lists or 1 list and 1 variable
     # check if var1 or var 2 is a phrase eg. "middle east"
     if type(var1) != list and (len(var1.split(" ")) >1):
-        var1 = findPhraseInIndex(var1)   
+        var1 = findPhraseInIndex(var1) 
     if type(var2) != list and (len(var2.split(" ")) >1):
         var2 = findPhraseInIndex(var2)
-
     if (type(var1)!=list) & (type(var2)!=list):
         if (var1 not in index) or (var2 not in index):
             return []
@@ -82,6 +82,7 @@ def not_operator(var):
 def findPhraseInIndex(phrase):
     # used in bigram to return the document numbers for the phrase given
     global currentCollection,index
+    phrase = "_".join(phrase.split(" "))
     if phrase in index:
         return (list(index[phrase].keys()))
     else:
@@ -148,11 +149,14 @@ def set_up_sets_and_operators(arguments):
                     phrase = True
         else: 
             if (("\"" not in x) and isPhrase == True):
+                #keeps track of phrase
                 phraseInQuotes = phraseInQuotes+" "+x
             elif (x[0] == "\"" and x[-1]!= "\"" and isPhrase == False):
+                #start of phrase
                 isPhrase = True
                 phraseInQuotes = phraseInQuotes+x[1:]
             elif(x[-1]== "\"" and isPhrase == True):
+                #end of phrase
                 phraseInQuotes = phraseInQuotes+" "+x[:-1]
                 sets.append(phraseInQuotes.lower())
                 isPhrase = False
@@ -179,12 +183,14 @@ def proximitySearch(q_num,dist,var1,var2):
     var1 = stem(var1)
     var2 = stem(var2)
     if (var1 in index) and (var2 in index):
+        #both words in index
         var1_docs = set(index[var1].keys())
         var2_docs = set(index[var2].keys())
         common_docs =  var1_docs.intersection(var2_docs)
         for doc in common_docs:
             var1_docs_iterator = 0
             var2_docs_iterator = 0
+            #loop through both lists of positions to see if condition is satisfied
             while var1_docs_iterator < len(index[var1][doc]) and var2_docs_iterator < len(index[var2][doc]):
                 val1_pos = int(index[var1][doc][var1_docs_iterator])
                 val2_pos = int(index[var2][doc][var2_docs_iterator])
@@ -204,6 +210,7 @@ def find_matches(q_num,arguments):
     global sets,operators,currentCollection,results,index,documents
     sets = []
     operators = []
+    arguments = list(map(lambda word:stem(word), arguments))
     if (arguments[0].startswith("#",0)):
         arguments = " ".join(arguments)
         # parses proximity search and sends it to the specified function
@@ -235,8 +242,6 @@ def find_matches(q_num,arguments):
             # evaluaste the logical expression
             sets_copy=sets.copy()
             operators_copy = operators.copy()
-            for i,x in enumerate(sets_copy):
-                sets_copy[i] = stem(x)
             while (len(operators_copy)!=0):
                 oper = operators_copy.pop(0)
                 if (oper == "NOT"):
@@ -265,6 +270,7 @@ def find_matches(q_num,arguments):
                 print("No search results")
                 return
             else:
+                print("here2wddf-------")
                 results.append([q_num,sets_copy[0]])
                 return
 
@@ -286,11 +292,12 @@ def parseQueries():
         parts = line.strip().split(" ")
         query_num = parts[0]
         query = [word.strip() for word in parts[1:]]
+        #sends query number and query to another function
         find_matches(query_num,query)
     output_results()
 
 def main(arguments):
-        parseQueries()
+    parseQueries()
     
 if __name__ == "__main__" :
     main(sys.argv)

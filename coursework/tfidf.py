@@ -5,7 +5,7 @@ from math import log
 import collections
 import operator
 
-collections =["sample","trec.sample"]
+collections =["sample","trec.sample","trec.5000"]
 currentCollection = collections[1]  #collection to be used
 stemming = True
 results = []
