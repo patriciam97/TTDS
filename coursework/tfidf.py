@@ -39,7 +39,6 @@ def get_top_documents(phrase):
     if len(docs) > 0:
         common_docs = set().union(*docs)
         for doc in common_docs:
-            # print(doc)
             score = 0
             for term in words:
                 score += weight(term,doc,index,documents)

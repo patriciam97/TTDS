@@ -1,6 +1,5 @@
 import re
 from stemming.porter2 import stem
-import matplotlib.pyplot as plt
 from collections import OrderedDict
 import itertools
 import xml.etree.ElementTree as ET
@@ -14,15 +13,13 @@ current_collection = collections[2]
 def read_stop_words():
     # collect stop words
     f = open ("stopWords.txt")
+    stop = {}
     for x in f.readlines():
-        stop.append(x.strip())
+        stop[x.strip()] = 1
     f.close()
-    
-def is_empty_string(word):
-    return word == ""
 
 def filter_out_stop_words(words, stop_words):
-    return list(filter(lambda word: word not in stop_words and not is_empty_string(word), words))
+    return list(filter(lambda word: word not in stop_words and word != "", words))
     
 def read_samples(ngram):
     # reads xml file and sends doc_id, content(heading and text) to the process_text function
@@ -38,7 +35,8 @@ def read_samples(ngram):
             content = content+" "+headline.text
         if text!= None:
             content = content+" "+text.text
-        content = filter_out_stop_words([word.lower() for word in content.split()],stop)
+        content = content.lower()
+        content = filter_out_stop_words([word for word in content.split()],stop)
         if not ngram:
             process_text(doc_id,content)
         else:
@@ -107,35 +105,24 @@ def save_index():
         f.write("%s:\n" % word)
         for doc in index[word]:
             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
+        f.write("\n")
+    
 
-# def save_inverted_index(title):
-#     file_Title= "preprocessing/inverted_Index/"+title+".txt"
-#     f = open(file_Title,"w+")
-#     for word in index:
-#         f.write("%s:\n" % word)
-#         for doc in index[word]:
-#             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
-
-# def save_n_gram_index(title,n):
-#     file_Title= "preprocessing/gram/"+title+"_"+str(n)+".txt"
-#     f = open(file_Title,"w+")
-#     for word in index:
-#         f.write("%s:\n" % word)
-#         for doc in index[word]:
-#             f.write("\t%s: %s\n"%(doc,",".join(str(x) for x in index[word][doc])))
 
 def read_index():
     title = "index.txt"
     f = open(title)
     index = {}
     documents = []
-    for line in f:
-        if(line.split(":")[1].strip()==""):
-            word = line.split(":")[0]
+    for line in f.readlines():
+        if line=="\n": continue
+        line = line.strip().split(":")
+        if(line[1]==""):
+            word = line[0]
             index[word]={}
         else:
-            document = line.split(":")[0].strip()
-            positions =line.split(":")[1].split(",")
+            document = line[0]
+            positions = line[1].split(",")
             if document not in documents:
                 documents.append(document)
             for x in positions:
