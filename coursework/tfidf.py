@@ -58,7 +58,7 @@ def output_results():
     #saves the scores in results.ranked.txt in the format given to us
     global results
     file_Title= "results.ranked.txt"
-    f = open(file_Title,"w+")
+    f = open(file_Title,"w")
     for q_id,docs in results:
         for doc,score in docs:
             f.write("{0} {1} {2} {3} {4:.4f} {5}\n".format(q_id,0,doc,0,score,0))

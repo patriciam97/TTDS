@@ -82,7 +82,7 @@ def not_operator(var):
 def findPhraseInIndex(phrase):
     # used in bigram to return the document numbers for the phrase given
     global currentCollection,index
-    phrase = "_".join(phrase.split(" "))
+    phrase = "_".join([stem(word) for word in phrase.split(" ")])
     if phrase in index:
         return (list(index[phrase].keys()))
     else:
@@ -250,7 +250,7 @@ def find_matches(q_num,arguments):
                     if docs != None:
                         sets_copy.append(list(docs))
                 elif (oper == "AND NOT"):
-                    not_docs = not_operator(sets_copy.pop(0))
+                    not_docs = not_operator(sets_copy.pop(-1))
                     if not_docs != None:
                         sets_copy.insert(0,and_operator(sets_copy.pop(0),not_docs))
                     else:
@@ -270,7 +270,6 @@ def find_matches(q_num,arguments):
                 print("No search results")
                 return
             else:
-                print("here2wddf-------")
                 results.append([q_num,sets_copy[0]])
                 return
 
@@ -278,7 +277,7 @@ def output_results():
     #used to save the results in results.boolean.txt in the format given to us
     global results
     file_Title= "results.boolean.txt"
-    f = open(file_Title,"w+")
+    f = open(file_Title,"w")
     for q_id,docs in results:
         for doc in docs:
             f.write("{0} {1} {2} {3} {4} {5}\n".format(q_id,0,doc,0,1,0))
@@ -298,6 +297,6 @@ def parseQueries():
 
 def main(arguments):
     parseQueries()
-    
+
 if __name__ == "__main__" :
     main(sys.argv)
