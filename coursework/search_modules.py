@@ -14,7 +14,7 @@ def and_operator(var1,var2):
     # and operator between 2 variables, 2 lists or 1 list and 1 variable
     # check if var1 or var 2 is a phrase eg. "middle east"
     if type(var1) != list and (len(var1.split(" ")) >1):
-        var1 = findPhraseInIndex(var1) 
+        var1 = findPhraseInIndex(var1)
     if type(var2) != list and (len(var2.split(" ")) >1):
         var2 = findPhraseInIndex(var2)
     if (type(var1)!=list) & (type(var2)!=list):
