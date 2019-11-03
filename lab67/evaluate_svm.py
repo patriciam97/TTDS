@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import multilabel_confusion_matrix
 
 def read_test_pred():
     catg_true, catg_pred =[],[]
@@ -13,12 +13,17 @@ def read_test_pred():
     return catg_true, catg_pred
 
 def calculate_statistics(catg_true,catg_pred):
+    acc = 0
+    for i,category in enumerate(multilabel_confusion_matrix(catg_true,catg_pred),1):
+        tp,fp = category[0]
+        tn,fn = category[1]
+        acc += (tp+tn)/(tn + fp + fn + tp )
+        pres = tp/(tp+fp)
+        recall = tp/(tp+fn)
+        f1 = (2*pres*recall)/(pres+recall)
+        print(str(i)+":	P="+str(pres)+" R="+str(recall)+" F="+str(f1)) 
+    print(acc)
     
-    tn, fp, fn, tp = confusion_matrix(catg_true,catg_pred)
-    acc = (tp+tn)/(tn + fp + fn + tp )
-    pres = tp/(tp+fp)
-    recall = tp/(tp+fn)
-
 def main():
     catg_true,catg_pred = read_test_pred()
     calculate_statistics(catg_true,catg_pred)
