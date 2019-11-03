@@ -13,9 +13,11 @@ def read_test_pred():
     return catg_true, catg_pred
 
 def calculate_statistics(catg_true,catg_pred):
+    
     tn, fp, fn, tp = confusion_matrix(catg_true,catg_pred)
     acc = (tp+tn)/(tn + fp + fn + tp )
     pres = tp/(tp+fp)
+    recall = tp/(tp+fn)
 
 def main():
     catg_true,catg_pred = read_test_pred()

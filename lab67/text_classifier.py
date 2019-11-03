@@ -22,7 +22,7 @@ def save_unique_terms (unique):
 def save_features (features,file_Title):
     f = open(file_Title,"w+")
     for catg_id,words,id_ in features:
-        terms = " ".join([str(word)+":"+str(value) for word,value in words.items()])
+        terms = " ".join([str(word)+":"+str(value) for word,value in sorted(words.items())])
         f.write(str(catg_id)+" "+terms+" #"+id_+"\n")
     f.close()
 
