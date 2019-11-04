@@ -55,6 +55,8 @@ def read_training_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
+            # if len(word)>0 and word[0]=="#" and word[1:]!="":
+            #     tweet.append(word[1:])
             if word not in words:
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -69,6 +71,8 @@ def read_testing_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
+            # if len(word)>0 and word[0]=="#" and word[1:]!="":
+            #     tweet.append(word[1:])
             if (word not in words) and (word in unique):
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -84,7 +88,11 @@ def parse_data(title):
                 tweet = parts[1]
                 category = parts[2].lower()
                 special_chars = re.compile('[^a-zA-Z]')
-                words = [word.strip().lower() if word[0:7]!="http://" else "" for word in tweet.split(" ")]
+                words = tweet.split(" ")
+                for word in words:
+                    if len(word)>0 and word[0]=="#":
+                        words.append(word[1:])
+                words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
                 words = [word for word in words if word.strip() != ""]
                 data.append([id_,category,words])
