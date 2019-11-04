@@ -83,7 +83,7 @@ def parse_data(title):
                 id_ = parts[0]
                 tweet = parts[1]
                 category = parts[2].lower()
-                special_chars = re.compile('[^a-zA-Z#]')
+                special_chars = re.compile('[^a-zA-Z]')
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in tweet.split(" ")]
                 words = [special_chars.sub("",word) for word in words]
                 words = [word for word in words if word.strip() != ""]
