@@ -1,18 +1,17 @@
 files = ["./systems/S1.results","./systems/S2.results","./systems/S3.results","./systems/S4.results","./systems/S5.results","./systems/S6.results"]
+
 def read_file(title,results):
     with open(title, encoding="utf8", errors='ignore') as f:
-        results[title[10:12]] = []
+        results[title[10:12]] = {}
         for line in f.readlines():
             line = line.split(" ")
             q_id = int(line[0])
             doc_id = int(line[2])
             rank_of_doc = line[3]
             score = line[4]
-            if q_id not in results[title[10:12]]:
-                results[title[10:12]]={q_id: [[doc_id,score]]}
-            else:
-               results[title[10:12]][q_id].append([doc_id,score])    
+            results[title[10:12]][rank_of_doc] = [doc_id,score] 
     return results
+
 def read_true_results():
     true = {}
     with open("./systems/qrels.txt", encoding="utf8", errors='ignore') as f:
@@ -26,7 +25,9 @@ def read_true_results():
                 if len(_tuple) == 2:
                     doc = _tuple[0][1:]
                     rel = _tuple[1][:-1]
-                    true[q_id][doc] = rel
+                    if rel in true[q_id]:
+                        true[q_id][rel].append(doc)
+                    else: true[q_id][rel] = [doc]
     return true
 
 def precisionAt(results,true,cutoff) :
@@ -46,13 +47,13 @@ def precisionAt(results,true,cutoff) :
                     other+=1
             print(found,other)
             
-
-
 def main():
     results = {}
     for file in files:
         resutls = read_file(file,results)
     true = read_true_results()
-    precisionAt(results,true,10)
+    print(results)
+    # print(true)
+    # precisionAt(results,true,10)
 if __name__ == "__main__" :
     main()
