@@ -23,9 +23,10 @@ def calculate_statistics(catg_true,catg_pred):
         recalls.append(tp/(tp+fn))
         f1.append((2*float(precisions[-1])*float(recalls[-1]))/((float(precisions[-1])+float(recalls[-1]))))
     print(accuracies)
-    print("Accuracy: " + str(sum(accuracies)/len(accuracies)))
+    print("Accuracy: " + str(round(sum(accuracies)/len(accuracies),3)))
+    print("Macro-F1: " + str(round(sum(f1)/len(f1),3)))
     for i,pres in enumerate(precisions):
-        print(str(i+1)+":	P="+str(pres)+" R="+str(recalls[i])+" F="+str(f1[i])) 
+        print(str(i+1)+":   P="+str(round(pres,3))+"   R="+str(round(recalls[i],3))+"   F="+str(round(f1[i],3))) 
 
     
 def main():
