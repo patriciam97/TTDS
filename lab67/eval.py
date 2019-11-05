@@ -36,7 +36,6 @@ def read_true_results():
     return true
 
 def precisionAt(results,true,cutoff) :
-    found,other = 0,0
     for file,result in results.items():
         precisions = []
         for q_id,docs in result.items():
@@ -56,7 +55,6 @@ def precisionAt(results,true,cutoff) :
         print("Precision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
 
 def recallAt(results,true,cutoff) :
-    found,other = 0,0
     for file,result in results.items():
         recalls = []
         for q_id,docs in result.items():
@@ -75,7 +73,24 @@ def recallAt(results,true,cutoff) :
             recalls.append(recall)
         print("Recall for file "+str(file)+" is: "+str(round(sum(recalls)/len(recalls),2)))
 
-# def rPrecision(results,true):
+def rPrecision(results,true):
+    for file,result in results.items():
+        precisions = []
+        for q_id,docs in result.items():
+            tp = 0
+            fp = 0
+            documents = []
+            for rel,t_docs in true[str(q_id)].items():
+                documents.extend(t_docs)
+            for rank,doc in docs.items():
+                if rank <= len(documents):
+                    if str(doc[0]) in documents:
+                        tp+=1
+                    else:
+                        fp+=1
+            pres = tp/(tp+fp)
+            precisions.append(pres)
+        print("RPrecision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
 
 def main():
     results = {}
@@ -84,6 +99,6 @@ def main():
     true = read_true_results()
     precisionAt(results,true,10)
     recallAt(resutls,true,50)
-    # rPrecision(results,true)
+    rPrecision(results,true)
 if __name__ == "__main__" :
     main()
