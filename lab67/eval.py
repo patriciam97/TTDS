@@ -92,6 +92,19 @@ def rPrecision(results,true):
             precisions.append(pres)
         print("RPrecision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
 
+def AP(results,true):
+    for file,result in results.items():
+        precisions = []
+        for q_id,docs in result.items():
+            documents = []
+            for rel,t_docs in true[str(q_id)].items():
+                documents.extend(t_docs)
+            i = 1
+            for rank,doc in docs.items():
+                if str(doc[0]) in documents:
+                    precisions.append(rank/i)
+                i+=1
+        print("AP for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
 def main():
     results = {}
     for file in files:
@@ -100,5 +113,6 @@ def main():
     precisionAt(results,true,10)
     recallAt(resutls,true,50)
     rPrecision(results,true)
+    AP(results,true)
 if __name__ == "__main__" :
     main()
