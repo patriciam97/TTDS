@@ -2,14 +2,19 @@ files = ["./systems/S1.results","./systems/S2.results","./systems/S3.results",".
 
 def read_file(title,results):
     with open(title, encoding="utf8", errors='ignore') as f:
-        results[title[10:12]] = {}
+        file = int(title[11:].split(".")[0])
+        results[file] = {}
         for line in f.readlines():
             line = line.split(" ")
             q_id = int(line[0])
             doc_id = int(line[2])
-            rank_of_doc = line[3]
+            rank_of_doc = int(line[3])
             score = line[4]
-            results[title[10:12]][rank_of_doc] = [doc_id,score] 
+            if q_id in results[file]:
+                results[file][q_id][rank_of_doc] = [doc_id,score] 
+            else:
+                results[file][q_id] = {}
+                results[file][q_id][rank_of_doc] = [doc_id,score] 
     return results
 
 def read_true_results():
@@ -32,28 +37,53 @@ def read_true_results():
 
 def precisionAt(results,true,cutoff) :
     found,other = 0,0
-    for key,value in results.items():
-        print(key)
-        for q_id,docs in value.items():
-            top_docs = docs[:(cutoff+2)]
-            print(top_docs)
-            true_results_for_query = true[str(q_id)]
-            print(true_results_for_query)
-            for doc in top_docs:
-                doc = doc[0]
-                if doc in true_results_for_query:
-                    found+=1
-                else:
-                    other+=1
-            print(found,other)
-            
+    for file,result in results.items():
+        precisions = []
+        for q_id,docs in result.items():
+            tp = 0
+            fp = 0
+            documents = []
+            for rel,t_docs in true[str(q_id)].items():
+                documents.extend(t_docs)
+            for rank,doc in docs.items():
+                if rank <= cutoff:
+                    if str(doc[0]) in documents:
+                        tp+=1
+                    else:
+                        fp+=1
+            pres = tp/(tp+fp)
+            precisions.append(pres)
+        print("Precision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
+
+def recallAt(results,true,cutoff) :
+    found,other = 0,0
+    for file,result in results.items():
+        recalls = []
+        for q_id,docs in result.items():
+            tp = 0
+            fp = 0
+            documents = []
+            for rel,t_docs in true[str(q_id)].items():
+                documents.extend(t_docs)
+            for rank,doc in docs.items():
+                if rank <= cutoff:
+                    if str(doc[0]) in documents:
+                        tp+=1
+                    else:
+                        fp+=1
+            recall = tp/len(documents)
+            recalls.append(recall)
+        print("Recall for file "+str(file)+" is: "+str(round(sum(recalls)/len(recalls),2)))
+
+# def rPrecision(results,true):
+
 def main():
     results = {}
     for file in files:
         resutls = read_file(file,results)
     true = read_true_results()
-    print(results)
-    # print(true)
-    # precisionAt(results,true,10)
+    precisionAt(results,true,10)
+    recallAt(resutls,true,50)
+    # rPrecision(results,true)
 if __name__ == "__main__" :
     main()
