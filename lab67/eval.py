@@ -35,9 +35,12 @@ def read_true_results():
                     else: true[q_id][rel] = [doc]
     return true
 
-def precisionAt(results,true,cutoff) :
+def statsAt(results,true,cutoff,ap=False) :
+    stats = {}
     for file,result in results.items():
-        precisions = []
+        precisions,recalls = [],[]
+        print(file)
+        stats[file]={'pres':{},'recall':{}}
         for q_id,docs in result.items():
             tp = 0
             fp = 0
@@ -51,31 +54,21 @@ def precisionAt(results,true,cutoff) :
                     else:
                         fp+=1
             pres = tp/(tp+fp)
-            precisions.append(pres)
-        print("Precision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
-
-def recallAt(results,true,cutoff) :
-    for file,result in results.items():
-        recalls = []
-        for q_id,docs in result.items():
-            tp = 0
-            fp = 0
-            documents = []
-            for rel,t_docs in true[str(q_id)].items():
-                documents.extend(t_docs)
-            for rank,doc in docs.items():
-                if rank <= cutoff:
-                    if str(doc[0]) in documents:
-                        tp+=1
-                    else:
-                        fp+=1
             recall = tp/len(documents)
-            recalls.append(recall)
-        print("Recall for file "+str(file)+" is: "+str(round(sum(recalls)/len(recalls),2)))
+            
+            stats[file]['pres'][q_id] = round(pres,2)
+            precisions.append(pres)
 
-def rPrecision(results,true):
+            stats[file]['recall'][q_id]=round(recall,2)
+            recalls.append(recall)
+        stats[file]['pres']['avg']=(round(sum(precisions)/len(precisions),2))
+        stats[file]['recall']['avg']=(round(sum(recalls)/len(recalls),2))
+    return stats
+
+def rPrecision(results,true,stats):
     for file,result in results.items():
         precisions = []
+        stats[file]['rPres']={}
         for q_id,docs in result.items():
             tp = 0
             fp = 0
@@ -89,30 +82,36 @@ def rPrecision(results,true):
                     else:
                         fp+=1
             pres = tp/(tp+fp)
+            stats[file]['rPres'][q_id]=round(pres,2)
             precisions.append(pres)
-        print("RPrecision for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
+        stats[file]['rPres']['avg']=round(sum(precisions)/len(precisions),2)
+    return stats
 
-def AP(results,true):
+def AP(results,true,stats):
     for file,result in results.items():
-        precisions = []
+        ap = []
+        stats[file]['ap']={}
         for q_id,docs in result.items():
             documents = []
             for rel,t_docs in true[str(q_id)].items():
                 documents.extend(t_docs)
-            i = 1
+            r = len(documents)
+            i = 0
             for rank,doc in docs.items():
-                if str(doc[0]) in documents:
-                    precisions.append(rank/i)
-                i+=1
-        print("AP for file "+str(file)+" is: "+str(round(sum(precisions)/len(precisions),2)))
+                print(rank,doc)
+                # if str(doc[0]) in documents:
+                    # do blah
+            i+=1  
+        return stats
+
 def main():
     results = {}
     for file in files:
         resutls = read_file(file,results)
     true = read_true_results()
-    precisionAt(results,true,10)
-    recallAt(resutls,true,50)
-    rPrecision(results,true)
-    AP(results,true)
+    statistics = statsAt(results,true,10)
+    statistics = rPrecision(results,true,statistics)
+    print(statistics)
+    # statistics = AP(results,true,statistics)
 if __name__ == "__main__" :
     main()
