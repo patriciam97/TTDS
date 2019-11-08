@@ -185,9 +185,9 @@ def output_stats(stats):
             else:
                 queries[int(q_id)-1].append(value)
 
-        for query in queries:
-            f.write(str(query[0]))
-            for value in query[1:]:
+        for i,query in enumerate(queries):
+            f.write(str(i))
+            for value in query:
                 f.write("\t{0}".format(str(value)))
             f.write("\n")
         f.close()
