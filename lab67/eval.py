@@ -1,3 +1,4 @@
+import math
 files = ["./systems/S1.results","./systems/S2.results","./systems/S3.results","./systems/S4.results","./systems/S5.results","./systems/S6.results"]
 
 def read_file(title,results):
@@ -113,6 +114,85 @@ def AP(results,true,stats):
         stats[file]['map']=round(sum(ap)/len(ap),2)
     return stats
 
+def nDCGAtK(results,true,k,stats):
+    nDcG_ideal= {}
+    for q_id in true:
+        ideal = 0
+        for rel,t_docs in sorted(true[str(q_id)].items()):
+            if float(rel) == 1:
+                ideal += float(rel)
+            elif float(rel) <= k:
+                ideal +=float(rel)/math.log(float(rel),2)
+            else: continue
+        nDcG_ideal[float(q_id)] = ideal
+
+    for file,result in results.items():
+        nDcg = []
+        stats[file]['dgc_'+str(k)]={}
+        true_documents = []
+        for q_id,docs in result.items():
+            nDcg_val = 0
+            for rank,doc in sorted(docs.items()):
+                if rank == 1:
+                    nDcg_val=float(doc[1])
+                elif rank <= k:
+                    nDcg_val+=(float(doc[1])/math.log(int(rank),2))
+                else: continue
+            nDcg.append(nDcg_val/nDcG_ideal[q_id])
+            stats[file]['dgc_'+str(k)][q_id] = round(nDcg_val/nDcG_ideal[q_id],2)
+        stats[file]['dgc_'+str(k)]['avg'] = round(sum(nDcg)/len(nDcg),2)
+    return stats
+    
+def output_stats(stats):
+    for file,results  in stats.items():
+        file_name = "S{0}.results".format(file)
+        f= open(file_name,"w+")
+        f.write("\tP@10\tR@50\tr-Precision\tAP\tnDCG@10\tnDCG@20\n")
+        queries = [[] for i in range(11)]
+        for q_id, value in results['pres'].items():
+            if q_id == 'avg':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for q_id, value in results['recall'].items():
+            if q_id == 'avg':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for q_id, value in results['rPres'].items():
+            if q_id == 'avg':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for q_id, value in results['ap'].items():
+            if q_id == 'map':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for q_id, value in results['dgc_10'].items():
+            if q_id == 'avg':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for q_id, value in results['dgc_20'].items():
+            if q_id == 'avg':
+                queries[-1].append(value)
+            else:
+                queries[int(q_id)-1].append(value)
+
+        for query in queries:
+            f.write(str(query[0]))
+            for value in query[1:]:
+                f.write("\t{0}".format(str(value)))
+            f.write("\n")
+        f.close()
+
+
 def main():
     results = {}
     for file in files:
@@ -121,6 +201,9 @@ def main():
     statistics = statsAt(results,true,10)
     statistics = rPrecision(results,true,statistics)
     statistics = AP(results,true,statistics)
-    print(statistics[3])
+    statistics = nDCGAtK(results,true,10,statistics)
+    statistics = nDCGAtK(results,true,20,statistics)
+    output_stats(statistics)
+
 if __name__ == "__main__" :
     main()
