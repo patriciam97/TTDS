@@ -35,11 +35,10 @@ def read_true_results():
                     else: true[q_id][rel] = [doc]
     return true
 
-def statsAt(results,true,cutoff,ap=False) :
+def statsAt(results,true,cutoff) :
     stats = {}
     for file,result in results.items():
         precisions,recalls = [],[]
-        print(file)
         stats[file]={'pres':{},'recall':{}}
         for q_id,docs in result.items():
             tp = 0
@@ -87,22 +86,32 @@ def rPrecision(results,true,stats):
         stats[file]['rPres']['avg']=round(sum(precisions)/len(precisions),2)
     return stats
 
+def precisionAtK(documents,true,k):
+    tp,fp = 0,0
+    for rank,doc in documents.items():
+        if str(doc[0]) in true[:k]:
+            tp+=1
+        else:
+            fp+=1
+    return tp/(tp+fp)
+
 def AP(results,true,stats):
     for file,result in results.items():
         ap = []
         stats[file]['ap']={}
+        true_documents = []
         for q_id,docs in result.items():
-            documents = []
+            ap_val = 0
             for rel,t_docs in true[str(q_id)].items():
-                documents.extend(t_docs)
-            r = len(documents)
-            i = 0
+                true_documents.extend(t_docs)
             for rank,doc in docs.items():
-                print(rank,doc)
-                # if str(doc[0]) in documents:
-                    # do blah
-            i+=1  
-        return stats
+                if str(doc[0]) in true_documents[:rank]:
+                    ap_val += precisionAtK(docs,true_documents,rank)
+            ap_val/=len(t_docs)
+            ap.append(ap_val)
+            stats[file]['ap'][q_id]=round(ap_val,2)
+        stats[file]['map']=round(sum(ap)/len(ap),2)
+    return stats
 
 def main():
     results = {}
@@ -111,7 +120,7 @@ def main():
     true = read_true_results()
     statistics = statsAt(results,true,10)
     statistics = rPrecision(results,true,statistics)
-    print(statistics)
-    # statistics = AP(results,true,statistics)
+    statistics = AP(results,true,statistics)
+    print(statistics[3])
 if __name__ == "__main__" :
     main()
