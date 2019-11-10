@@ -39,8 +39,9 @@ def read_true_results():
 def statsAt(results,true,cutoff) :
     stats = {}
     for file,result in results.items():
+        filename='S'+str(file)
+        stats[filename]={}
         precisions,recalls = [],[]
-        stats[file]={'pres':{},'recall':{}}
         for q_id,docs in result.items():
             tp = 0
             fp = 0
@@ -55,20 +56,21 @@ def statsAt(results,true,cutoff) :
                         fp+=1
             pres = tp/(tp+fp)
             recall = tp/len(documents)
-            
-            stats[file]['pres'][q_id] = round(pres,2)
+            if q_id not in stats[filename]: stats[filename][q_id]={}
+            stats[filename][q_id]['pres'] = round(pres,2)
             precisions.append(pres)
 
-            stats[file]['recall'][q_id]=round(recall,2)
+            stats[filename][q_id]['recall'] =round(recall,2)
             recalls.append(recall)
-        stats[file]['pres']['avg']=(round(sum(precisions)/len(precisions),2))
-        stats[file]['recall']['avg']=(round(sum(recalls)/len(recalls),2))
+        if 'avg' not in stats[filename]: stats[filename]['avg']={}
+        stats[filename]['avg']['pres'] =(round(sum(precisions)/len(precisions),2))
+        stats[filename]['avg']['recall'] =(round(sum(recalls)/len(recalls),2))
     return stats
 
 def rPrecision(results,true,stats):
     for file,result in results.items():
+        filename='S'+str(file)
         precisions = []
-        stats[file]['rPres']={}
         for q_id,docs in result.items():
             tp = 0
             fp = 0
@@ -82,9 +84,9 @@ def rPrecision(results,true,stats):
                     else:
                         fp+=1
             pres = tp/(tp+fp)
-            stats[file]['rPres'][q_id]=round(pres,2)
+            stats[filename][q_id]['rPres']=round(pres,2)
             precisions.append(pres)
-        stats[file]['rPres']['avg']=round(sum(precisions)/len(precisions),2)
+        stats[filename]['avg']['rPres'] =round(sum(precisions)/len(precisions),2)
     return stats
 
 def precisionAtK(documents,true,k):
@@ -98,8 +100,8 @@ def precisionAtK(documents,true,k):
 
 def AP(results,true,stats):
     for file,result in results.items():
+        filename='S'+str(file)
         ap = []
-        stats[file]['ap']={}
         true_documents = []
         for q_id,docs in result.items():
             ap_val = 0
@@ -110,8 +112,8 @@ def AP(results,true,stats):
                     ap_val += precisionAtK(docs,true_documents,rank)
             ap_val/=len(t_docs)
             ap.append(ap_val)
-            stats[file]['ap'][q_id]=round(ap_val,2)
-        stats[file]['map']=round(sum(ap)/len(ap),2)
+            stats[filename][q_id]['ap']=round(ap_val,2)
+        stats[filename]['avg']['map']=round(sum(ap)/len(ap),2)
     return stats
 
 def nDCGAtK(results,true,k,stats):
@@ -127,8 +129,8 @@ def nDCGAtK(results,true,k,stats):
         nDcG_ideal[float(q_id)] = ideal
 
     for file,result in results.items():
+        filename='S'+str(file)
         nDcg = []
-        stats[file]['dgc_'+str(k)]={}
         true_documents = []
         for q_id,docs in result.items():
             nDcg_val = 0
@@ -139,57 +141,31 @@ def nDCGAtK(results,true,k,stats):
                     nDcg_val+=(float(doc[1])/math.log(int(rank),2))
                 else: continue
             nDcg.append(nDcg_val/nDcG_ideal[q_id])
-            stats[file]['dgc_'+str(k)][q_id] = round(nDcg_val/nDcG_ideal[q_id],2)
-        stats[file]['dgc_'+str(k)]['avg'] = round(sum(nDcg)/len(nDcg),2)
+            stats[filename][q_id]['dgc_'+str(k)] = round(nDcg_val/nDcG_ideal[q_id],2)
+        stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),2)
     return stats
     
 def output_stats(stats):
     for file,results  in stats.items():
-        file_name = "S{0}.results".format(file)
+        file_name = "{0}.results".format(file)
         f= open(file_name,"w+")
         f.write("\tP@10\tR@50\tr-Precision\tAP\tnDCG@10\tnDCG@20\n")
         queries = [[] for i in range(11)]
-        for q_id, value in results['pres'].items():
-            if q_id == 'avg':
-                queries[-1].append(value)
+        for q_id,results in results.items():
+            pres = results['pres']
+            recall = results['recall']
+            rPres = results['rPres']
+            if q_id != "avg":
+                ap = results['ap']
             else:
-                queries[int(q_id)-1].append(value)
-
-        for q_id, value in results['recall'].items():
-            if q_id == 'avg':
-                queries[-1].append(value)
+                ap = results['map']
+            dgc_10 = results['dgc_10']
+            dgc_20 = results['dgc_20']
+            if q_id != "avg":
+                f.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(q_id,pres,recall,rPres,dgc_10,dgc_20))
             else:
-                queries[int(q_id)-1].append(value)
-
-        for q_id, value in results['rPres'].items():
-            if q_id == 'avg':
-                queries[-1].append(value)
-            else:
-                queries[int(q_id)-1].append(value)
-
-        for q_id, value in results['ap'].items():
-            if q_id == 'map':
-                queries[-1].append(value)
-            else:
-                queries[int(q_id)-1].append(value)
-
-        for q_id, value in results['dgc_10'].items():
-            if q_id == 'avg':
-                queries[-1].append(value)
-            else:
-                queries[int(q_id)-1].append(value)
-
-        for q_id, value in results['dgc_20'].items():
-            if q_id == 'avg':
-                queries[-1].append(value)
-            else:
-                queries[int(q_id)-1].append(value)
-
-        for i,query in enumerate(queries):
-            f.write(str(i))
-            for value in query:
-                f.write("\t{0}".format(str(value)))
-            f.write("\n")
+                f.write("mean\t{0}\t{1}\t{2}\t{3}\t{4}".format(pres,recall,rPres,dgc_10,dgc_20))
+        print("{0}.results Saved".format(file))
         f.close()
 
 
