@@ -146,11 +146,13 @@ def nDCGAtK(results,true,k,stats):
     return stats
     
 def output_stats(stats):
+    a=open("All.eval","w+")
+    a.write("\tP@10\tR@50\tr-Precision\tAP\tnDCG@10\tnDCG@20\n")
+
     for file,results  in stats.items():
         file_name = "{0}.results".format(file)
         f= open(file_name,"w+")
         f.write("\tP@10\tR@50\tr-Precision\tAP\tnDCG@10\tnDCG@20\n")
-        queries = [[] for i in range(11)]
         for q_id,results in results.items():
             pres = results['pres']
             recall = results['recall']
@@ -165,8 +167,14 @@ def output_stats(stats):
                 f.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(q_id,pres,recall,rPres,dgc_10,dgc_20))
             else:
                 f.write("mean\t{0}\t{1}\t{2}\t{3}\t{4}".format(pres,recall,rPres,dgc_10,dgc_20))
+                print(file)
+                a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(file,pres,recall,rPres,dgc_10,dgc_20))
         print("{0}.results Saved".format(file))
         f.close()
+    print("All.results Saved")
+    a.close()
+        
+        
 
 
 def main():
