@@ -78,7 +78,7 @@ def read_training_data():
 def read_testing_data():
     features = []
     unique = read_unique_terms()
-    data = parse_data(training_path)
+    data = parse_data(testing_path)
     categories = read_categories()
     for id_,categ,tweet in data:
         catg_id = categories[categ.strip()]
@@ -93,6 +93,7 @@ def read_testing_data():
 
 def parse_data(title):
     with open(title, encoding="utf8", errors='ignore') as f:
+        print("Reading{0}".format(title))
         data = []
         for line in f.readlines():
             parts = (line.split("\t"))
