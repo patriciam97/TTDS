@@ -22,8 +22,9 @@ def find_unique_terms(words,unique,index):
     for word in words:
         if word != "" and word not in stop_words and word[0:7]!="http://" :
             word = special_chars.sub("",word)
+            word = stem(word.strip().lower())
             if word not in unique:
-                unique[word.strip().lower()]=index
+                unique[word]=index
                 index+=1
     return unique,index
 
@@ -70,6 +71,7 @@ def read_training_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
+            word = stem(word)
             if word not in words:
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -84,6 +86,7 @@ def read_testing_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
+            word = stem(word)
             # if len(word)>0 and word[0]=="#" and word[1:]!="":
             #     tweet.append(word[1:])
             if (word not in words) and (word in unique):
@@ -102,14 +105,14 @@ def parse_data(title):
                 tweet = parts[1]
                 category = parts[2].lower()
                 words = tweet.split(" ")
-                for word in words:
-                    if word in stop_words:
-                        continue
+                # for word in words:
+                #     if word in stop_words:
+                #         continue
                     # if len(word)>0 and word[0]=="#":
                     #     words.append(word[1:])
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
-                words = [word for word in words if word.strip() != ""]
+                words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
                 data.append([id_,category,words])
         f.close()
     return data
