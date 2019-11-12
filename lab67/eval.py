@@ -57,14 +57,14 @@ def statsAt(results,true,cutoff) :
             pres = tp/(tp+fp)
             recall = tp/len(documents)
             if q_id not in stats[filename]: stats[filename][q_id]={}
-            stats[filename][q_id]['pres'] = round(pres,2)
+            stats[filename][q_id]['pres'] = round(pres,3)
             precisions.append(pres)
 
-            stats[filename][q_id]['recall'] =round(recall,2)
+            stats[filename][q_id]['recall'] =round(recall,3)
             recalls.append(recall)
         if 'avg' not in stats[filename]: stats[filename]['avg']={}
-        stats[filename]['avg']['pres'] =(round(sum(precisions)/len(precisions),2))
-        stats[filename]['avg']['recall'] =(round(sum(recalls)/len(recalls),2))
+        stats[filename]['avg']['pres'] =(round(sum(precisions)/len(precisions),3))
+        stats[filename]['avg']['recall'] =(round(sum(recalls)/len(recalls),3))
     return stats
 
 def rPrecision(results,true,stats):
@@ -84,9 +84,9 @@ def rPrecision(results,true,stats):
                     else:
                         fp+=1
             pres = tp/(tp+fp)
-            stats[filename][q_id]['rPres']=round(pres,2)
+            stats[filename][q_id]['rPres']=round(pres,3)
             precisions.append(pres)
-        stats[filename]['avg']['rPres'] =round(sum(precisions)/len(precisions),2)
+        stats[filename]['avg']['rPres'] =round(sum(precisions)/len(precisions),3)
     return stats
 
 def precisionAtK(documents,true,k):
@@ -112,8 +112,8 @@ def AP(results,true,stats):
                     ap_val += precisionAtK(docs,true_documents,rank)
             ap_val/=len(t_docs)
             ap.append(ap_val)
-            stats[filename][q_id]['ap']=round(ap_val,2)
-        stats[filename]['avg']['map']=round(sum(ap)/len(ap),2)
+            stats[filename][q_id]['ap']=round(ap_val,3)
+        stats[filename]['avg']['map']=round(sum(ap)/len(ap),3)
     return stats
 
 def nDCGAtK(results,true,k,stats):
@@ -141,8 +141,8 @@ def nDCGAtK(results,true,k,stats):
                     nDcg_val+=(float(doc[1])/math.log(int(rank),2))
                 else: continue
             nDcg.append(nDcg_val/nDcG_ideal[q_id])
-            stats[filename][q_id]['dgc_'+str(k)] = round(nDcg_val/nDcG_ideal[q_id],2)
-        stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),2)
+            stats[filename][q_id]['dgc_'+str(k)] = round(nDcg_val/nDcG_ideal[q_id],3)
+        stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),3)
     return stats
     
 def output_stats(stats):
@@ -167,7 +167,6 @@ def output_stats(stats):
                 f.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(q_id,pres,recall,rPres,dgc_10,dgc_20))
             else:
                 f.write("mean\t{0}\t{1}\t{2}\t{3}\t{4}".format(pres,recall,rPres,dgc_10,dgc_20))
-                print(file)
                 a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(file,pres,recall,rPres,dgc_10,dgc_20))
         print("{0}.results Saved".format(file))
         f.close()
