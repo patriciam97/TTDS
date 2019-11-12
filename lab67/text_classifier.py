@@ -78,7 +78,7 @@ def read_training_data():
 def read_testing_data():
     features = []
     unique = read_unique_terms()
-    data = parse_data(testing_path)
+    data = parse_data(training_path)
     categories = read_categories()
     for id_,categ,tweet in data:
         catg_id = categories[categ.strip()]
