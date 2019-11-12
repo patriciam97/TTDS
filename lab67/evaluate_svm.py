@@ -22,13 +22,16 @@ def calculate_statistics(catg_true,catg_pred):
         precisions.append(tp/(tp+fp))
         recalls.append(tp/(tp+fn))
         f1.append((2*float(precisions[-1])*float(recalls[-1]))/((float(precisions[-1])+float(recalls[-1]))))
-    print(accuracies)
-    print("Accuracy: " + str(round(sum(accuracies)/len(accuracies),3)))
-    print("Macro-F1: " + str(round(sum(f1)/len(f1),3)))
+    save_statistics(accuracies,precisions,recalls,f1)
+   
+def save_statistics(accuracies,precisions,recalls,f1):
+    file_Title= "Eval2.txt"
+    f = open(file_Title,"w+")  
+    f.write("Accuracy: " + str(round(sum(accuracies)/len(accuracies),3))+"\n")
+    f.write("Macro-F1: " + str(round(sum(f1)/len(f1),3))+"\n")
     for i,pres in enumerate(precisions):
-        print(str(i+1)+":   P="+str(round(pres,3))+"   R="+str(round(recalls[i],3))+"   F="+str(round(f1[i],3))) 
-
-    
+        f.write(str(i+1)+":\tP="+str(round(pres,3))+"\tR="+str(round(recalls[i],3))+"\tF="+str(round(f1[i],3))+"\n") 
+    print("Eval2.txt saved.")
 def main():
     catg_true,catg_pred = read_test_pred()
     calculate_statistics(catg_true,catg_pred)

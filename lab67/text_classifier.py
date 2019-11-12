@@ -1,14 +1,29 @@
 import re
 from sklearn.svm import SVC
+from stemming.porter2 import stem
+
 
 training_path = "tweetsclassification/Tweets.14cat.train"
 testing_path = "tweetsclassification/Tweets.14cat.test"
+stop_words = {}
+special_chars = re.compile('[^a-zA-Z]')
+
+def read_stop_words():
+    # collect stop words
+    global stop_words
+    f = open ("stopWords.txt")
+    stop_words = {}
+    for x in f.readlines():
+        #save stop words in a global list
+        stop_words[x.strip()] = 1
+    f.close()
 
 def find_unique_terms(words,unique,index):
     for word in words:
-        if word != "":
+        if word != "" and word not in stop_words and word[0:7]!="http://" :
+            word = special_chars.sub("",word)
             if word not in unique:
-                unique[word]=index
+                unique[word.strip().lower()]=index
                 index+=1
     return unique,index
 
@@ -55,8 +70,6 @@ def read_training_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
-            # if len(word)>0 and word[0]=="#" and word[1:]!="":
-            #     tweet.append(word[1:])
             if word not in words:
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -87,11 +100,12 @@ def parse_data(title):
                 id_ = parts[0]
                 tweet = parts[1]
                 category = parts[2].lower()
-                special_chars = re.compile('[^a-zA-Z]')
                 words = tweet.split(" ")
                 for word in words:
-                    if len(word)>0 and word[0]=="#":
-                        words.append(word[1:])
+                    if word in stop_words:
+                        continue
+                    # if len(word)>0 and word[0]=="#":
+                    #     words.append(word[1:])
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
                 words = [word for word in words if word.strip() != ""]
