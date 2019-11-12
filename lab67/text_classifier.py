@@ -6,7 +6,7 @@ from stemming.porter2 import stem
 training_path = "tweetsclassification/Tweets.14cat.train"
 testing_path = "tweetsclassification/Tweets.14cat.test"
 stop_words = {}
-special_chars = re.compile('[^a-zA-Z]')
+special_chars = re.compile('[^a-zA-Z#]')
 
 def read_stop_words():
     # collect stop words
@@ -21,6 +21,9 @@ def read_stop_words():
 def find_unique_terms(words,unique,index):
     for word in words:
         if word != "" and word not in stop_words and word[0:7]!="http://" :
+            if word[0]=="#":
+                print("hashtag")
+                words.append(word[1:])
             word = special_chars.sub("",word)
             word = stem(word.strip().lower())
             if word not in unique:
