@@ -36,12 +36,12 @@ def read_true_results():
                     else: true[q_id][rel] = [doc]
     return true
 
-def statsAt(results,true,cutoff) :
+def presAt(results,true,cutoff) :
     stats = {}
     for file,result in results.items():
         filename='S'+str(file)
         stats[filename]={}
-        precisions,recalls = [],[]
+        precisions= []
         for q_id,docs in result.items():
             tp = 0
             fp = 0
@@ -55,15 +55,34 @@ def statsAt(results,true,cutoff) :
                     else:
                         fp+=1
             pres = tp/(tp+fp)
-            recall = tp/len(documents)
             if q_id not in stats[filename]: stats[filename][q_id]={}
             stats[filename][q_id]['pres'] = round(pres,3)
             precisions.append(pres)
+        if 'avg' not in stats[filename]: stats[filename]['avg']={}
+        stats[filename]['avg']['pres'] =(round(sum(precisions)/len(precisions),3))
+    return stats
 
+def recallAt(results,true,cutoff,stats) :
+    for file,result in results.items():
+        filename='S'+str(file)
+        recalls = []
+        for q_id,docs in result.items():
+            tp = 0
+            fp = 0
+            documents = []
+            for rel,t_docs in true[str(q_id)].items():
+                documents.extend(t_docs)
+            for rank,doc in docs.items():
+                if rank <= cutoff:
+                    if str(doc[0]) in documents:
+                        tp+=1
+                    else:
+                        fp+=1
+            recall = tp/len(documents)
+            if q_id not in stats[filename]: stats[filename][q_id]={}
             stats[filename][q_id]['recall'] =round(recall,3)
             recalls.append(recall)
         if 'avg' not in stats[filename]: stats[filename]['avg']={}
-        stats[filename]['avg']['pres'] =(round(sum(precisions)/len(precisions),3))
         stats[filename]['avg']['recall'] =(round(sum(recalls)/len(recalls),3))
     return stats
 
@@ -161,13 +180,14 @@ def output_stats(stats):
                 ap = results['ap']
             else:
                 ap = results['map']
+                print(ap)
             dgc_10 = results['dgc_10']
             dgc_20 = results['dgc_20']
             if q_id != "avg":
-                f.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(q_id,pres,recall,rPres,dgc_10,dgc_20))
+                f.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n".format(q_id,pres,recall,rPres,ap,dgc_10,dgc_20))
             else:
-                f.write("mean\t{0}\t{1}\t{2}\t{3}\t{4}".format(pres,recall,rPres,dgc_10,dgc_20))
-                a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\n".format(file,pres,recall,rPres,dgc_10,dgc_20))
+                f.write("mean\t{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(pres,recall,rPres,ap,dgc_10,dgc_20))
+                a.write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\n".format(file,pres,recall,rPres,ap,dgc_10,dgc_20))
         print("{0}.results Saved".format(file))
         f.close()
     print("All.results Saved")
@@ -181,7 +201,8 @@ def main():
     for file in files:
         resutls = read_file(file,results)
     true = read_true_results()
-    statistics = statsAt(results,true,10)
+    statistics = presAt(results,true,10)
+    statistics = recallAt(results,true,50,statistics)
     statistics = rPrecision(results,true,statistics)
     statistics = AP(results,true,statistics)
     statistics = nDCGAtK(results,true,10,statistics)
