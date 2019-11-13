@@ -1,13 +1,26 @@
 import re
 from sklearn.svm import SVC
 from stemming.porter2 import stem
+# from bs4 import BeautifulSoup
+# import requests
+# from requests.adapters import HTTPAdapter
+# from requests.packages.urllib3.util.retry import Retry
+import requests
+from urllib import request, response, error, parse
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
 
+# session = requests.Session()
+# retry = Retry(connect=1, backoff_factor=0)
+# adapter = HTTPAdapter(max_retries=retry)
+# session.mount('http://', adapter)
+# session.mount('https://', adapter)
 
 training_path = "tweetsclassification/Tweets.14cat.train"
 testing_path = "tweetsclassification/Tweets.14cat.test"
 stop_words = {}
 special_chars = re.compile('[^a-zA-Z#]')
-
+links = {}
 def read_stop_words():
     # collect stop words
     global stop_words
@@ -20,9 +33,23 @@ def read_stop_words():
 
 def find_unique_terms(words,unique,index):
     for word in words:
+        if word[0:7]=="http://" :
+            if word in links:
+                words.extend(links.get(word).split(" "))
+            else:
+                try:
+                    html = urlopen(word)
+                    soup = BeautifulSoup(html,"lxml")
+                    title = soup.title
+                    titleText = title.get_text()
+                    words.extend(titleText.split(" "))
+                    links[word]=titleText
+                    print(links)
+                except:
+                    pass
         if word != "" and word not in stop_words and word[0:7]!="http://" :
             if word[0]=="#":
-                print("hashtag")
+                # print("hashtag")
                 words.append(word[1:])
             word = special_chars.sub("",word)
             word = stem(word.strip().lower())
@@ -99,7 +126,7 @@ def read_testing_data():
 
 def parse_data(title):
     with open(title, encoding="utf8", errors='ignore') as f:
-        print("Reading{0}".format(title))
+        print("Reading {0}".format(title))
         data = []
         for line in f.readlines():
             parts = (line.split("\t"))
@@ -108,11 +135,21 @@ def parse_data(title):
                 tweet = parts[1]
                 category = parts[2].lower()
                 words = tweet.split(" ")
-                # for word in words:
-                #     if word in stop_words:
-                #         continue
-                    # if len(word)>0 and word[0]=="#":
-                    #     words.append(word[1:])
+                for word in words:
+                    if word[0:7]=="http://" :
+                        if word in links:
+                            words.extend(links.get(word).split(" "))
+                        else:
+                            try:
+                                html = urlopen(word)
+                                soup = BeautifulSoup(html,"lxml")
+                                title = soup.title
+                                titleText = title.get_text()
+                                words.extend(titleText.split(" "))
+                                links[word]=titleText
+                                print(links)
+                            except:
+                                pass
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
                 words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
