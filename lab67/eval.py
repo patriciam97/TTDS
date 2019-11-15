@@ -142,19 +142,25 @@ def AP(results,true,stats):
 
 def nDCGAtK(results,true,k,stats):
     nDcG_ideal= {}
+    l_dict = {}
     for q_id in true:
         ideal = 0
         flag = True
-        for i,(rel,t_docs) in enumerate(sorted(true[str(q_id)].items(), key = lambda x : x[0] ),1):
+        print("-----")
+        l = list(sorted(true[str(q_id)].items(), key = lambda x : x[0], reverse = True ))
+        l = [(doc,rel) for rel,docs in l for doc in docs]
+        l_dict[str(q_id)] = {}
+        for doc, rel in l:
+            l_dict[str(q_id)][doc] = rel
+        
+        for i,(doc,rel)in enumerate(l,1):
             if flag:
-                ideal = float(rel)
+                ideal = int(rel)
                 flag = False
-            elif float(i) <= k:
-                for x in enumerate(t_docs):
-                    ideal +=float(rel)/math.log(float(i),2)
-            else: continue
+            elif i <= k:
+                ideal +=int(rel)/math.log(i,2)
+            else: break
         nDcG_ideal[q_id] = ideal
-    print(nDcG_ideal)
 
     for file,result in results.items():
         filename='S'+str(file)
@@ -162,29 +168,27 @@ def nDCGAtK(results,true,k,stats):
         true_documents = []
         for q_id,docs in result.items():
             nDcg_val = 0
-            all_res = [ doc for rel,doc in true[str(q_id)].items()]
-            all_rel = [ rel for rel,doc in true[str(q_id)].items()]
             ideal = 0
             flag = True
-            for rank,doc in sorted(docs.items()):
+            current_l_dict = l_dict[str(q_id)]
+            for rank,doc in docs.items():
+                grade = current_l_dict[str(doc[0])] if str(doc[0]) in current_l_dict else 0 
                 if flag:
-                    nDcg_val=float(doc[1])
+                    nDcg_val=float(grade)
                     flag = False
                 elif rank <= k:
-                    nDcg_val+=((float(doc[1])/math.log(int(rank),2)))
+                    nDcg_val+=float(grade)/math.log(int(rank),2)
+                print(rank)
                 if rank == k:
                     break
-                # print(str(doc[0]) in all_res)
-                # if str(doc[0]) in all_res:
-                #     ideal+=all_rel[all_res.index(doc[0])]
-                #     print(ideal)
+            
             if nDcG_ideal[str(q_id)] != 0:
                 nDcg.append(nDcg_val/nDcG_ideal[str(q_id)])
                 stats[filename][q_id]['dgc_'+str(k)] = round((nDcg_val/nDcG_ideal[str(q_id)]),3)
             else:
                 nDcg.append(0)
                 stats[filename][q_id]['dgc_'+str(k)] = 0
-        stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),3)
+        stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),3) if len(nDcg) != 0 else 0 
     return stats
     
 def output_stats(stats):
