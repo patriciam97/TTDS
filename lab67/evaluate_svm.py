@@ -7,7 +7,7 @@ def read_test_pred():
             true_catg = line.split(" ")[0]
             catg_true.append(true_catg)
     t.close()
-    with open("pred2.out", encoding="utf8", errors='ignore') as p:
+    with open("pred3.out", encoding="utf8", errors='ignore') as p:
         for line in p.readlines():
             pred_catg = line.split(" ")[0]
             catg_pred.append(pred_catg)

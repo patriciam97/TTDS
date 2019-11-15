@@ -48,7 +48,7 @@ def presAt(results,true,cutoff) :
             documents = []
             for rel,t_docs in true[str(q_id)].items():
                 documents.extend(t_docs)
-            for rank,doc in docs.items():
+            for rank,doc in sorted(docs.items()):
                 if rank <= cutoff:
                     if str(doc[0]) in documents:
                         tp+=1
@@ -72,7 +72,7 @@ def recallAt(results,true,cutoff,stats) :
             documents = []
             for rel,t_docs in true[str(q_id)].items():
                 documents.extend(t_docs)
-            for rank,doc in docs.items():
+            for rank,doc in sorted(docs.items()):
                 if rank <= cutoff:
                     if str(doc[0]) in documents:
                         tp+=1
@@ -110,8 +110,8 @@ def rPrecision(results,true,stats):
 
 def precisionAtK(documents,true,k):
     tp,fp = 0,0
-    for rank,doc in documents.items():
-        if str(doc[0]) in true[:k]:
+    for rank,doc in list(documents.items())[:k]:
+        if str(doc[0]) in true:
             tp+=1
         else:
             fp+=1
@@ -121,15 +121,20 @@ def AP(results,true,stats):
     for file,result in results.items():
         filename='S'+str(file)
         ap = []
-        true_documents = []
         for q_id,docs in result.items():
             ap_val = 0
+            true_documents = []
+            relevant = 0
             for rel,t_docs in true[str(q_id)].items():
                 true_documents.extend(t_docs)
             for rank,doc in docs.items():
-                if str(doc[0]) in true_documents[:rank]:
-                    ap_val += precisionAtK(docs,true_documents,rank)
-            ap_val/=len(t_docs)
+                if str(doc[0]) in true_documents:
+                    relevant+=1
+                    ap_val += precisionAtK(docs,true_documents,rank)            
+            if relevant != 0:
+                ap_val/=relevant
+            else:
+                ap_val = 0
             ap.append(ap_val)
             stats[filename][q_id]['ap']=round(ap_val,3)
         stats[filename]['avg']['map']=round(sum(ap)/len(ap),3)
@@ -139,13 +144,17 @@ def nDCGAtK(results,true,k,stats):
     nDcG_ideal= {}
     for q_id in true:
         ideal = 0
-        for rel,t_docs in sorted(true[str(q_id)].items()):
-            if float(rel) == 1:
-                ideal += float(rel)
-            elif float(rel) <= k:
-                ideal +=float(rel)/math.log(float(rel),2)
+        flag = True
+        for i,(rel,t_docs) in enumerate(sorted(true[str(q_id)].items(), key = lambda x : x[0] ),1):
+            if flag:
+                ideal = float(rel)
+                flag = False
+            elif float(i) <= k:
+                for x in enumerate(t_docs):
+                    ideal +=float(rel)/math.log(float(i),2)
             else: continue
-        nDcG_ideal[float(q_id)] = ideal
+        nDcG_ideal[q_id] = ideal
+    print(nDcG_ideal)
 
     for file,result in results.items():
         filename='S'+str(file)
@@ -153,14 +162,28 @@ def nDCGAtK(results,true,k,stats):
         true_documents = []
         for q_id,docs in result.items():
             nDcg_val = 0
+            all_res = [ doc for rel,doc in true[str(q_id)].items()]
+            all_rel = [ rel for rel,doc in true[str(q_id)].items()]
+            ideal = 0
+            flag = True
             for rank,doc in sorted(docs.items()):
-                if rank == 1:
+                if flag:
                     nDcg_val=float(doc[1])
+                    flag = False
                 elif rank <= k:
-                    nDcg_val+=(float(doc[1])/math.log(int(rank),2))
-                else: continue
-            nDcg.append(nDcg_val/nDcG_ideal[q_id])
-            stats[filename][q_id]['dgc_'+str(k)] = round(nDcg_val/nDcG_ideal[q_id],3)
+                    nDcg_val+=((float(doc[1])/math.log(int(rank),2)))
+                if rank == k:
+                    break
+                # print(str(doc[0]) in all_res)
+                # if str(doc[0]) in all_res:
+                #     ideal+=all_rel[all_res.index(doc[0])]
+                #     print(ideal)
+            if nDcG_ideal[str(q_id)] != 0:
+                nDcg.append(nDcg_val/nDcG_ideal[str(q_id)])
+                stats[filename][q_id]['dgc_'+str(k)] = round((nDcg_val/nDcG_ideal[str(q_id)]),3)
+            else:
+                nDcg.append(0)
+                stats[filename][q_id]['dgc_'+str(k)] = 0
         stats[filename]['avg']['dgc_'+str(k)]= round(sum(nDcg)/len(nDcg),3)
     return stats
     
@@ -180,7 +203,7 @@ def output_stats(stats):
                 ap = results['ap']
             else:
                 ap = results['map']
-                print(ap)
+                # print(ap)
             dgc_10 = results['dgc_10']
             dgc_20 = results['dgc_20']
             if q_id != "avg":

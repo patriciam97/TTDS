@@ -9,7 +9,7 @@ import requests
 from urllib import request, response, error, parse
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-
+from emoji import UNICODE_EMOJI
 # session = requests.Session()
 # retry = Retry(connect=1, backoff_factor=0)
 # adapter = HTTPAdapter(max_retries=retry)
@@ -33,20 +33,20 @@ def read_stop_words():
 
 def find_unique_terms(words,unique,index):
     for word in words:
-        if word[0:7]=="http://" :
-            if word in links:
-                words.extend(links.get(word).split(" "))
-            else:
-                try:
-                    html = urlopen(word)
-                    soup = BeautifulSoup(html,"lxml")
-                    title = soup.title
-                    titleText = title.get_text()
-                    words.extend(titleText.split(" "))
-                    links[word]=titleText
-                    print(links)
-                except:
-                    pass
+        # if word[0:7]=="http://" :
+        #     if word in links:
+        #         words.extend(links.get(word).split(" "))
+        #     else:
+        #         try:
+        #             html = urlopen(word)
+        #             soup = BeautifulSoup(html,"lxml")
+        #             title = soup.title
+        #             titleText = title.get_text()
+        #             words.extend(titleText.split(" "))
+        #             links[word]=titleText
+        #             print(links)
+        #         except:
+        #             pass
         if word != "" and word not in stop_words and word[0:7]!="http://" :
             if word[0]=="#":
                 # print("hashtag")
@@ -135,21 +135,21 @@ def parse_data(title):
                 tweet = parts[1]
                 category = parts[2].lower()
                 words = tweet.split(" ")
-                for word in words:
-                    if word[0:7]=="http://" :
-                        if word in links:
-                            words.extend(links.get(word).split(" "))
-                        else:
-                            try:
-                                html = urlopen(word)
-                                soup = BeautifulSoup(html,"lxml")
-                                title = soup.title
-                                titleText = title.get_text()
-                                words.extend(titleText.split(" "))
-                                links[word]=titleText
-                                print(links)
-                            except:
-                                pass
+                # for word in words:
+                #     if word[0:7]=="http://" :
+                #         if word in links:
+                #             words.extend(links.get(word).split(" "))
+                #         else:
+                #             try:
+                #                 html = urlopen(word)
+                #                 soup = BeautifulSoup(html,"lxml")
+                #                 title = soup.title
+                #                 titleText = title.get_text()
+                #                 words.extend(titleText.split(" "))
+                #                 links[word]=titleText
+                #                 print(links)
+                #             except:
+                #                 pass
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
                 words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
@@ -166,6 +166,9 @@ def extract_unique_terms():
     for tweet in data:
         unique,index = find_unique_terms(tweet[2],unique,index)
     save_unique_terms(unique)
+
+def is_emoji(s):
+    return s in UNICODE_EMOJI
 
 def main():
     extract_unique_terms()
