@@ -8,7 +8,7 @@ def read_test_pred():
             true_catg = line.split(" ")[0]
             catg_true.append(true_catg)
     t.close()
-    with open("pred1200.out", encoding="utf8", errors='ignore') as p:
+    with open("pred.out", encoding="utf8", errors='ignore') as p:
         for line in p.readlines():
             pred_catg = line.split(" ")[0]
             catg_pred.append(pred_catg)
@@ -49,7 +49,7 @@ def calculate_statistics(catg_true,catg_pred):
     save_statistics(accuracies,precisions,recalls,f1)
    
 def save_statistics(accuracies,precisions,recalls,f1):
-    file_Title= "Eval1200.txt"
+    file_Title= "Eval.txt"
     f = open(file_Title,"w+")  
     f.write("Accuracy: " + str(round(sum(accuracies),3))+"\n")
     f.write("Macro-F1: " + str(round(sum(f1)/len(f1),3))+"\n")

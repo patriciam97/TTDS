@@ -47,14 +47,14 @@ def find_unique_terms(words,unique,index):
         #             print(links)
         #         except:
         #             pass
-        if word != "" and word[0:7]!="http://" :
-        # if word != "" and word not in stop_words and word[0:7]!="http://" :
-            # if word[0]=="#":
-            #     # print("hashtag")
-            #     words.append(word[1:])
+        # if word != "" and word[0:7]!="http://" :
+        if word != "" and word not in stop_words and word[0:7]!="http://" :
+            if word[0]=="#":
+                # print("hashtag")
+                words.append(word[1:])
             word = special_chars.sub("",word)
-            word = word.strip().lower()
-            # word = stem(word.strip().lower())
+            # word = word.strip().lower()
+            word = stem(word.strip().lower())
             if word not in unique:
                 unique[word]=index
                 index+=1
@@ -103,7 +103,7 @@ def read_training_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
-            # word = stem(word)
+            word = stem(word)
             if word not in words:
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -118,7 +118,7 @@ def read_testing_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
-            # word = stem(word)
+            word = stem(word)
             # if len(word)>0 and word[0]=="#" and word[1:]!="":
             #     tweet.append(word[1:])
             if (word not in words) and (word in unique):
@@ -154,8 +154,8 @@ def parse_data(title):
                 #                 pass
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
                 words = [special_chars.sub("",word) for word in words]
-                words = [word for word in words if word.strip() != "" and word not in stop_words.keys()]
-                # words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
+                # words = [word for word in words if word.strip() != "" and word not in stop_words.keys()]
+                words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
                 data.append([id_,category,words])
         f.close()
     return data
