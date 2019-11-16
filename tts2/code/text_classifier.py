@@ -16,9 +16,9 @@ links = {}
 
 # set expand links to True in order to expand the tweets with the webpage's title
 expand_links = False
-stemming = True
-stopping = True
-hashtags  = True
+stemming = False
+stopping = False
+hashtags  = False
 
 def read_stop_words():
     # collect stop words
