@@ -1,5 +1,4 @@
 import re
-from sklearn.svm import SVC
 from stemming.porter2 import stem
 
 import requests
@@ -12,9 +11,14 @@ training_path = "tweetsclassification/Tweets.14cat.train"
 testing_path = "tweetsclassification/Tweets.14cat.test"
 stop_words = {}
 special_chars = re.compile('[^a-zA-Z#]')
+non_alpha_chars = re.compile('[^a-zA-Z#]')
 links = {}
+
 # set expand links to True in order to expand the tweets with the webpage's title
 expand_links = False
+stemming = True
+stopping = True
+hashtags  = True
 
 def read_stop_words():
     # collect stop words
@@ -44,11 +48,17 @@ def find_unique_terms(words,unique,index):
                     except:
                         pass
         if word != "" and word not in stop_words and word[0:7]!="http://" :
-            if word[0]=="#":  
+            if word[0]=="#" and hashtags:  
                 # append the word without the hashtag character
                 words.append(word[1:])
-            word = special_chars.sub("",word)
-            word = stem(word.strip().lower())
+            if hashtags:
+                word = special_chars.sub("",word)
+            else:
+                word = non_alpha_chars.sub("",word)
+            if stemming:     
+                word = stem(word.strip().lower())
+            else:
+                word = word.strip().lower()
             if word not in unique:
                 unique[word]=index
                 index+=1
@@ -97,7 +107,8 @@ def read_training_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
-            word = stem(word)
+            if stemming:    
+                word = stem(word)
             if word not in words:
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -112,7 +123,8 @@ def read_testing_data():
         catg_id = categories[categ.strip()]
         words = {}
         for word in tweet:
-            word = stem(word)
+            if stemming:
+                word = stem(word)
             if (word not in words) and (word in unique):
                 words[unique[word]]=1
         features.append([catg_id,words,id_])
@@ -147,10 +159,21 @@ def parse_data(title):
                                     pass
                 # remove any links
                 words = [word.strip().lower() if word[0:7]!="http://" else "" for word in words]
-                #  remove any non-alphabetic character or non-#
-                words = [special_chars.sub("",word) for word in words]
+                if hashtags:
+                    #  remove any non-alphabetic character or non-#
+                    words = [special_chars.sub("",word) for word in words]
+                else:
+                    words = [non_alpha_chars.sub("",word) for word in words]
                 # steeming and stopping
-                words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
+                if stemming and stopping:
+                    words = [stem(word) for word in words if word.strip() != "" and word not in stop_words.keys()]
+                elif stemming:
+                     words = [stem(word) for word in words if word.strip() != ""]
+                elif stopping:
+                    words = [word for word in words if word.strip() != "" and word not in stop_words.keys()]
+                else:
+                     words = [word for word in words if word.strip() != ""]
+
                 data.append([id_,category,words])
         f.close()
     return data
