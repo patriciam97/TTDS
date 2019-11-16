@@ -8,8 +8,8 @@ def read_test_pred(baseline):
             true_catg = line.split(" ")[0]
             catg_true.append(true_catg)
     t.close()
-    file = "data/results/pred.out" if baseline else "data/results/pred4000.out" 
-    with open("data/results/pred4750.out", encoding="utf8", errors='ignore') as p:
+    file = "data/results/pred.out" if baseline else "data/results/pred4750.out" 
+    with open(file, encoding="utf8", errors='ignore') as p:
         for line in p.readlines():
             pred_catg = line.split(" ")[0]
             catg_pred.append(pred_catg)
@@ -39,7 +39,9 @@ def save_statistics(accuracies,precisions,recalls,f1,baseline):
         f.write(str(i+1)+": P="+str(round(pres,3))+" R="+str(round(recalls[i],3))+" F="+str(round(f1[i],3))+"\n") 
     print("${0} saved".format(file_Title))
 def main():
-    baseline = False
+    baseline = False 
+    # set baseline to True when you want to output eval.txt for baseline model
+    
     catg_true,catg_pred = read_test_pred(baseline)
     calculate_statistics(catg_true,catg_pred,baseline)
 

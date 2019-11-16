@@ -35,11 +35,23 @@
     Then: 
 
     FOR TEXT-CLASSIFICATION:
+
    - $ python3 text_classifier.py
+            --> if you want to run this with hashtags,stemming and stopping leave the booleans at lines 19-21 as True. If you want to disable something simply set it to False.
    - Run the SVM:
+
+    ---- FOR BASELINE ----------------------------------------------------
       - $ ./svm_multiclass_learn -c 1000 data/results/feats.train model 
+            
       - $ ./svm_multiclass_classify data/results/feats.test model pred.out 
-   - $ python3 evaluate_svm.py
+
+    ---- FOR IMPROVED MODEL ----------------------------------------------------
+      - $ ./svm_multiclass_learn -c 4750 data/results/feats.train model 
+            
+      - $ ./svm_multiclass_classify data/results/feats.test model pred4750.out 
+            
+   - $ python3 evaluate_svm.py 
+          ---> If you are evaluating the improved system, set the variable on line 42 as False otherwise if you are evaluating the baseline model set it to True.
 
    FOR IR EVALUATION:
    - $ python3 eval.py
